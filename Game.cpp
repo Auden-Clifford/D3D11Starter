@@ -7,6 +7,12 @@
 
 #include <DirectXMath.h>
 
+// This code assumes files are in "ImGui" subfolder!
+// Adjust as necessary for your own folder structure and project setup
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_dx11.h"
+#include "ImGui/imgui_impl_win32.h"
+
 // Needed for a helper function to load pre-compiled shader files
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3dcompiler.h>
@@ -14,12 +20,75 @@
 // For the DirectX Math library
 using namespace DirectX;
 
+#pragma region helper functions
+static float backgroundColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+static float demoWindowVisible = false;
+/// <summary>
+/// Updates the ImGui window
+/// </summary>
+/// <param name="deltaTime">time passed since last frame</param>
+void InitializeNewUIFrame(float a_fDeltaTime)
+{
+	// Feed fresh data to ImGui
+	ImGuiIO& io = ImGui::GetIO();
+	io.DeltaTime = a_fDeltaTime;
+	io.DisplaySize.x = (float)Window::Width();
+	io.DisplaySize.y = (float)Window::Height();
+	// Reset the frame
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	// Determine new input capture
+	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
+	Input::SetMouseCapture(io.WantCaptureMouse);
+	// Show the demo window
+	if (demoWindowVisible)
+	{
+		ImGui::ShowDemoWindow();
+	}
+}
+
+void BuildUI()
+{
+	int number = 0;
+	ImGui::Begin("Inspector"); // Everything after is part of the window
+	ImGui::Text("Framerate: %f", ImGui::GetIO().Framerate);
+	ImGui::Text("Window Dimentions: %ux%u", Window::Width(), Window::Height());
+	ImGui::ColorEdit4("Background color editor", backgroundColor);
+
+	// number is an integer variable defined elsewhere
+	// Create a slider from 0-100 which reads and updates number
+	ImGui::SliderInt("Choose a number", &number, 0, 100);
+	// Create a button and test for a click
+	if (ImGui::Button("Show ImGui Demo Window"))
+	{
+		if (demoWindowVisible)
+		{
+			demoWindowVisible = false;
+		}
+		else
+		{
+			demoWindowVisible = true;
+		}
+	}
+	ImGui::End(); // Ends the current window
+}
+#pragma endregion
+
 // --------------------------------------------------------
 // Called once per program, after the window and graphics API
 // are initialized but before the game loop begins
 // --------------------------------------------------------
 void Game::Initialize()
 {
+	// Initialize ImGui itself & platform/renderer backends
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui_ImplWin32_Init(Window::Handle());
+	ImGui_ImplDX11_Init(Graphics::Device.Get(), Graphics::Context.Get());
+	// Pick a style (uncomment one of these 3)
+	ImGui::StyleColorsDark();
+
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
@@ -58,7 +127,10 @@ void Game::Initialize()
 // --------------------------------------------------------
 Game::~Game()
 {
-
+	// ImGui clean up
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }
 
 
@@ -240,12 +312,18 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
+	// initialize ImGui frame
+	InitializeNewUIFrame(deltaTime);
+
+	//create UI
+	BuildUI();
+
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
 }
 
-
+ 
 // --------------------------------------------------------
 // Clear the screen, redraw everything, present to the user
 // --------------------------------------------------------
@@ -256,8 +334,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
 		// Clear the back buffer (erase what's on screen) and depth buffer
-		const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
-		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	color);
+		//static float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	backgroundColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
@@ -285,6 +363,9 @@ void Game::Draw(float deltaTime, float totalTime)
 			3,     // The number of indices to use (we could draw a subset if we wanted)
 			0,     // Offset to the first index we want to use
 			0);    // Offset to add to each index when looking up vertices
+
+		ImGui::Render(); // Turns this frame’s UI into renderable triangles
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
 	}
 
 	// Frame END
@@ -304,6 +385,5 @@ void Game::Draw(float deltaTime, float totalTime)
 			Graphics::DepthBufferDSV.Get());
 	}
 }
-
 
 
