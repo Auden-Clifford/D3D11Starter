@@ -20,59 +20,10 @@
 // For the DirectX Math library
 using namespace DirectX;
 
-#pragma region helper functions
+#pragma region Temporary Variables
 static float backgroundColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 static float demoWindowVisible = false;
-/// <summary>
-/// Updates the ImGui window
-/// </summary>
-/// <param name="deltaTime">time passed since last frame</param>
-void InitializeNewUIFrame(float a_fDeltaTime)
-{
-	// Feed fresh data to ImGui
-	ImGuiIO& io = ImGui::GetIO();
-	io.DeltaTime = a_fDeltaTime;
-	io.DisplaySize.x = (float)Window::Width();
-	io.DisplaySize.y = (float)Window::Height();
-	// Reset the frame
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-	// Determine new input capture
-	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
-	Input::SetMouseCapture(io.WantCaptureMouse);
-	// Show the demo window
-	if (demoWindowVisible)
-	{
-		ImGui::ShowDemoWindow();
-	}
-}
 
-void BuildUI()
-{
-	int number = 0;
-	ImGui::Begin("Inspector"); // Everything after is part of the window
-	ImGui::Text("Framerate: %f", ImGui::GetIO().Framerate);
-	ImGui::Text("Window Dimentions: %ux%u", Window::Width(), Window::Height());
-	ImGui::ColorEdit4("Background color editor", backgroundColor);
-
-	// number is an integer variable defined elsewhere
-	// Create a slider from 0-100 which reads and updates number
-	ImGui::SliderInt("Choose a number", &number, 0, 100);
-	// Create a button and test for a click
-	if (ImGui::Button("Show ImGui Demo Window"))
-	{
-		if (demoWindowVisible)
-		{
-			demoWindowVisible = false;
-		}
-		else
-		{
-			demoWindowVisible = true;
-		}
-	}
-	ImGui::End(); // Ends the current window
-}
 #pragma endregion
 
 // --------------------------------------------------------
@@ -385,5 +336,105 @@ void Game::Draw(float deltaTime, float totalTime)
 			Graphics::DepthBufferDSV.Get());
 	}
 }
+
+#pragma region Helper Functions
+/// <summary>
+/// Updates the ImGui window
+/// </summary>
+/// <param name="deltaTime">time passed since last frame</param>
+void Game::InitializeNewUIFrame(float a_fDeltaTime)
+{
+	// Feed fresh data to ImGui
+	ImGuiIO& io = ImGui::GetIO();
+	io.DeltaTime = a_fDeltaTime;
+	io.DisplaySize.x = (float)Window::Width();
+	io.DisplaySize.y = (float)Window::Height();
+	// Reset the frame
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	// Determine new input capture
+	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
+	Input::SetMouseCapture(io.WantCaptureMouse);
+	// Show the demo window
+	if (demoWindowVisible)
+	{
+		ImGui::ShowDemoWindow();
+	}
+}
+
+void Game::BuildUI()
+{
+	ImGui::Begin("Inspector");
+	// display the framerate
+	ImGui::Text("Framerate: %f", ImGui::GetIO().Framerate);
+	// display the dimentions of the game window
+	ImGui::Text("Window Dimentions: %ux%u", Window::Width(), Window::Height());
+
+	// change the background color
+	ImGui::ColorEdit4("Background color editor", backgroundColor);
+
+	// button toggles the demo window on and off
+	if (ImGui::Button("Show ImGui Demo Window"))
+	{
+		if (demoWindowVisible)
+		{
+			demoWindowVisible = false;
+		}
+		else
+		{
+			demoWindowVisible = true;
+		}
+	}
+
+	// allows the user to select a number and doubles it
+	static int number = 0;
+	ImGui::SliderInt("Choose a number", &number, 0, 100);
+	ImGui::Text("That number doubled is %i", number * 2);
+
+	static bool notARobot = false;
+	ImGui::Checkbox("I am not a robot", &notARobot);
+	if (notARobot)
+	{
+		ImGui::Text("Thats just what a robot would say... ");
+	}
+
+	// allows the user to select their favorite color from ROYGBIV, and will judge their choice
+	const char* colors[] = { "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" };
+	static int selectedColorIndex = 0;
+	if (ImGui::BeginListBox("Choose your favorite color"))
+	{
+		for (int i = 0; i < IM_ARRAYSIZE(colors); i++)
+		{
+			const bool is_selected = (selectedColorIndex == i);
+			if (ImGui::Selectable(colors[i], is_selected))
+				selectedColorIndex = i;
+
+			/*
+			if (item_highlight && ImGui::IsItemHovered())
+				item_highlighted_idx = n;
+			*/
+
+			// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndListBox();
+	}
+	ImGui::Text("You selected: %s", colors[selectedColorIndex]);
+
+	switch (selectedColorIndex)
+	{
+	case 0: ImGui::Text("Red is pretty cool"); break;
+	case 1: ImGui::Text("Oh come on, no one's THAT into school spirit"); break;
+	case 2: ImGui::Text("Not valid"); break;
+	case 3: ImGui::Text("Bad choice"); break;
+	case 4: ImGui::Text("Blue is incorrect"); break;
+	case 5: ImGui::Text("That's not a real color"); break;
+	case 6: ImGui::Text("Just say purple"); break;
+	}
+	ImGui::End(); // Ends the current window
+}
+#pragma endregion
 
 
