@@ -54,3 +54,39 @@ Mesh::Mesh(Vertex* a_pVerticies, unsigned int a_uVerticiesLength, unsigned int* 
 
 // default destructor
 Mesh::~Mesh(){}
+
+/// <summary>
+/// Returns the vertex buffer ComPtr
+/// </summary>
+/// <returns>vertex buffer ComPtr</returns>
+Microsoft::WRL::ComPtr<ID3D11Buffer> Mesh::GetVertexBuffer()
+{
+	return m_cpVertexBuffer;
+}
+
+/// <summary>
+/// Returns the index buffer ComPtr
+/// </summary>
+/// <returns>index buffer ComPtr</returns>
+Microsoft::WRL::ComPtr<ID3D11Buffer> Mesh::GetIndexBuffer()
+{
+	return m_cpIndexBuffer;
+}
+
+/// <summary>
+/// Returns the number of indicies in this mesh
+/// </summary>
+/// <returns>number of indicies</returns>
+unsigned int Mesh::GetIndexCount()
+{
+	return m_uIndicies;
+}
+
+/// <summary>
+/// Returns the number of verticies in this mesh
+/// </summary>
+/// <returns>number of verticies</returns>
+unsigned int Mesh::GetVertexCount()
+{
+	return m_uVertices;
+}
