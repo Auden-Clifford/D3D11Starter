@@ -179,11 +179,27 @@ void Game::CreateGeometry()
 	//    knowing the exact size (in pixels) of the image/window/etc.  
 	// - Long story short: Resizing the window also resizes the triangle,
 	//    since we're describing the triangle in terms of the window itself
-	Vertex vertices[] =
+	Vertex defaultTriangleVertices[] =
 	{
 		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), red },
 		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), blue },
 		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), green },
+	};
+
+	Vertex squareVertices[] =
+	{
+		{ XMFLOAT3(+0.55f, +0.35f, +0.0f), red },
+		{ XMFLOAT3(+0.85f, +0.35f, +0.0f), blue },
+		{ XMFLOAT3(+0.85f, +0.85f, +0.0f), green },
+		{ XMFLOAT3(+0.55f, +0.85f, +0.0f), blue },
+	};
+
+	Vertex diamondVertices[] =
+	{
+		{ XMFLOAT3(-0.50f, +0.85f, +0.0f), red },
+		{ XMFLOAT3(-0.35f, +0.70f, +0.0f), blue },
+		{ XMFLOAT3(-0.50f, +0.55f, +0.0f), green },
+		{ XMFLOAT3(-0.65f, +0.70f, +0.0f), blue },
 	};
 
 	// Set up indices, which tell us which vertices to use and in which order
@@ -191,10 +207,14 @@ void Game::CreateGeometry()
 	// - Indices are technically not required if the vertices are in the buffer 
 	//    in the correct order and each one will be used exactly once
 	// - But just to see how it's done...
-	unsigned int indices[] = { 0, 1, 2 };
+	unsigned int defaultTriangleIndices[] = { 0, 1, 2 };
+	unsigned int squareIndices[] = { 0, 3, 1, 3, 2 ,1 };
+	unsigned int diamondIndices[] = { 0, 1, 3, 1, 2 ,3 };
 	
 	//create some meshes
-	m_spDefaultTriangle = std::make_shared<Mesh>(vertices, 3, indices, 3);
+	m_spDefaultTriangle = std::make_shared<Mesh>(defaultTriangleVertices, 3, defaultTriangleIndices, 3);
+	m_spSquare = std::make_shared<Mesh>(squareVertices, 4, squareIndices, 6);
+	m_spDiamond = std::make_shared<Mesh>(diamondVertices, 4, diamondIndices, 6);
 }
 
 
@@ -244,6 +264,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - Other Direct3D calls will also be necessary to do more complex things
 	{
 		m_spDefaultTriangle->Draw();
+		m_spSquare->Draw();
+		m_spDiamond->Draw();
 	}
 
 	ImGui::Render(); // Turns this frame’s UI into renderable triangles
@@ -362,6 +384,26 @@ void Game::BuildUI()
 	case 4: ImGui::Text("Blue is incorrect"); break;
 	case 5: ImGui::Text("That's not a real color"); break;
 	case 6: ImGui::Text("Just say purple"); break;
+	}
+
+	// display info about meshes
+	if(ImGui::CollapsingHeader("Meshes", ImGuiTreeNodeFlags_None))
+	{
+		if (ImGui::CollapsingHeader("Triangle", ImGuiTreeNodeFlags_None))
+		{
+			ImGui::Text("Verticies %u", m_spDefaultTriangle->GetVertexCount());
+			ImGui::Text("Indicies %u", m_spDefaultTriangle->GetIndexCount());
+		}
+		if (ImGui::CollapsingHeader("Square", ImGuiTreeNodeFlags_None))
+		{
+			ImGui::Text("Verticies %u", m_spSquare->GetVertexCount());
+			ImGui::Text("Indicies %u", m_spSquare->GetIndexCount());
+		}
+		if (ImGui::CollapsingHeader("Diamond", ImGuiTreeNodeFlags_None))
+		{
+			ImGui::Text("Verticies %u", m_spDiamond->GetVertexCount());
+			ImGui::Text("Indicies %u", m_spDiamond->GetIndexCount());
+		}
 	}
 	ImGui::End(); // Ends the current window
 }

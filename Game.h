@@ -48,6 +48,7 @@ private:
 #pragma region Temp Variables
 	std::shared_ptr<Mesh> m_spDefaultTriangle;
 	std::shared_ptr<Mesh> m_spSquare;
+	std::shared_ptr<Mesh> m_spDiamond;
 #pragma endregion
 
 	
