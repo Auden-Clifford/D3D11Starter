@@ -25,7 +25,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cpVertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cpIndexBuffer;
 
-	unsigned int m_nIndicies; //number of indices in index buffer
-	unsigned int m_nVertices; //number of vertices in vertex buffer
-	unsigned int m_nFaces;
+	unsigned int m_uIndicies; //number of indices in index buffer
+	unsigned int m_uVertices; //number of vertices in vertex buffer
+	//unsigned int m_nFaces;
 };
