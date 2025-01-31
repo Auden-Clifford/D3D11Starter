@@ -2,6 +2,8 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
+#include "Mesh.h"
+#include <memory>
 
 class Game
 {
@@ -41,6 +43,11 @@ private:
 #pragma region Helper Functions
 	void InitializeNewUIFrame(float a_fDeltaTime);
 	void BuildUI();
+#pragma endregion
+
+#pragma region Temp Variables
+	std::shared_ptr<Mesh> m_spDefaultTriangle;
+	std::shared_ptr<Mesh> m_spSquare;
 #pragma endregion
 
 	

@@ -90,3 +90,21 @@ unsigned int Mesh::GetVertexCount()
 {
 	return m_uVertices;
 }
+
+/// <summary>
+/// Sets the buffers and draws the mesh
+/// </summary>
+void Mesh::Draw()
+{
+	// set buffers in the IA stage
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	Graphics::Context->IASetVertexBuffers(0, 1, m_cpVertexBuffer.GetAddressOf(), &stride, &offset);
+	Graphics::Context->IASetIndexBuffer(m_cpIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+
+	// Tell Direct 3D to draw
+	Graphics::Context->DrawIndexed(
+		m_uIndicies,     // The number of indices to use (we could draw a subset if we wanted)
+		0,     // Offset to the first index we want to use
+		0);    // Offset to add to each index when looking up vertices
+}
