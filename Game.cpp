@@ -5,6 +5,7 @@
 #include "PathHelpers.h"
 #include "Window.h"
 #include "Mesh.h"
+#include "BufferStructs.h"
 
 #include <DirectXMath.h>
 
@@ -24,6 +25,8 @@ using namespace DirectX;
 #pragma region Temporary Variables
 static float backgroundColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 static float demoWindowVisible = false;
+static float offset[3] = { 0.0f, 0.0f, 0.0f };
+static float tint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 #pragma endregion
 
 // --------------------------------------------------------
@@ -67,6 +70,18 @@ void Game::Initialize()
 		Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
 		Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
 	}
+
+	//calcualate the amount of space our struct needs (next multiple of 16)
+	unsigned int size = sizeof(VertexShaderData);
+	size = (size + 15) / 16 * 16;
+
+	// Describe the constant buffer
+	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.ByteWidth = size; // Must be a multiple of 16
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	Graphics::Device->CreateBuffer(&cbDesc, 0, constantBuffer.GetAddressOf());
 }
 
 
@@ -166,6 +181,8 @@ void Game::CreateGeometry()
 	XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 	XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+	XMFLOAT4 black = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	XMFLOAT4 white = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// Set up the vertices of the triangle we would like to draw
 	// - We're going to copy this array, exactly as it exists in CPU memory
@@ -196,10 +213,10 @@ void Game::CreateGeometry()
 
 	Vertex diamondVertices[] =
 	{
-		{ XMFLOAT3(-0.50f, +0.85f, +0.0f), red },
-		{ XMFLOAT3(-0.35f, +0.70f, +0.0f), blue },
-		{ XMFLOAT3(-0.50f, +0.55f, +0.0f), green },
-		{ XMFLOAT3(-0.65f, +0.70f, +0.0f), blue },
+		{ XMFLOAT3(-0.50f, +0.85f, +0.0f), black },
+		{ XMFLOAT3(-0.35f, +0.70f, +0.0f), white },
+		{ XMFLOAT3(-0.50f, +0.55f, +0.0f), black },
+		{ XMFLOAT3(-0.65f, +0.70f, +0.0f), white },
 	};
 
 	// Set up indices, which tell us which vertices to use and in which order
@@ -258,6 +275,23 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	backgroundColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
+
+	// Edit Constant buffer
+	VertexShaderData vsdData;
+	vsdData.colorTint = XMFLOAT4(tint);
+	vsdData.offset = XMFLOAT3(offset);
+
+	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+
+	memcpy(mappedBuffer.pData, &vsdData, sizeof(vsdData));
+
+	Graphics::Context->Unmap(constantBuffer.Get(), 0);
+
+	Graphics::Context->VSSetConstantBuffers(
+		0, // the slot (register) to bind the buffer to
+		1, // number of buffers to set right now
+		constantBuffer.GetAddressOf()); // buffer adress
 
 	// DRAW geometry
 	// - These steps are generally repeated for EACH object you draw
@@ -385,6 +419,10 @@ void Game::BuildUI()
 	case 5: ImGui::Text("That's not a real color"); break;
 	case 6: ImGui::Text("Just say purple"); break;
 	}
+
+	// allow user to edit mesh offset/color
+	ImGui::DragFloat3("Mesh Offset", offset, 0.1f, -1.0f, 1.0f);
+	ImGui::ColorEdit4("Mesh Tint", tint);
 
 	// display info about meshes
 	if(ImGui::CollapsingHeader("Meshes", ImGuiTreeNodeFlags_None))
