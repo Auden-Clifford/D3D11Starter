@@ -1,4 +1,5 @@
 #pragma once
+
 #include <DirectXMath.h>
 
 class Transform
@@ -9,12 +10,12 @@ public:
 	~Transform();
 
 	// Setters
-	void SetPosition(float x, float y, float z);
-	void SetPosition(DirectX::XMFLOAT3 position);
-	void SetRotation(float pitch, float yaw, float roll);
-	void SetRotation(DirectX::XMFLOAT3 rotation);
-	void SetScale(float x, float y, float z);
-	void SetScale(DirectX::XMFLOAT3 scale);
+	void SetPosition(float a_fXPosition, float a_fYPosition, float a_fZPosition);
+	void SetPosition(DirectX::XMFLOAT3 a_f3Position);
+	void SetRotation(float a_fPitch, float a_fYaw, float a_fRoll);
+	void SetRotation(DirectX::XMFLOAT3 a_f3Rotation);
+	void SetScale(float a_fXScale, float a_fYScale, float a_fZScale);
+	void SetScale(DirectX::XMFLOAT3 a_f3Scale);
 
 	// Getters
 	DirectX::XMFLOAT3 GetPosition();
@@ -24,19 +25,21 @@ public:
 	DirectX::XMFLOAT4X4 GetWorldInverseTransposeMatrix();
 
 	// Transformers (roll out!)
-	void MoveAbsolute(float x, float y, float z);
-	void MoveAbsolute(DirectX::XMFLOAT3 offset);
-	void Rotate(float pitch, float yaw, float roll);
-	void Rotate(DirectX::XMFLOAT3 rotation);
-	void Scale(float x, float y, float z);
-	void Scale(DirectX::XMFLOAT3 scale);
+	void MoveAbsolute(float a_fXOffset, float a_fYOffset, float a_fZOffset);
+	void MoveAbsolute(DirectX::XMFLOAT3 a_f3Offset);
+	void Rotate(float a_fPitch, float a_fYaw, float a_fRoll);
+	void Rotate(DirectX::XMFLOAT3 a_f3Rotation);
+	void Scale(float a_fXScale, float a_fYScale, float a_fZScale);
+	void Scale(DirectX::XMFLOAT3 a_f3Scale);
 
 
 private:
-	DirectX::XMFLOAT3 position;
-	DirectX::XMFLOAT3 rotation;
-	DirectX::XMFLOAT3 scale;
+	DirectX::XMFLOAT3 m_f3Position;
+	DirectX::XMFLOAT3 m_f3Rotation;
+	DirectX::XMFLOAT3 m_f3Scale;
 
-	DirectX::XMFLOAT4X4 world;
-	DirectX::XMFLOAT4X4 worldInverseTranspose;
+	DirectX::XMFLOAT4X4 m_m4World;
+	DirectX::XMFLOAT4X4 m_m4WorldInverseTranspose;
+
+	bool m_bDirty;
 };
