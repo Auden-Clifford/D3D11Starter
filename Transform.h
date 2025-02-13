@@ -7,7 +7,6 @@ class Transform
 public:
 	// OOP stuff
 	Transform();
-	~Transform();
 
 	// Setters
 	void SetPosition(float a_fXPosition, float a_fYPosition, float a_fZPosition);
