@@ -25,7 +25,6 @@ using namespace DirectX;
 #pragma region Temporary Variables
 static float backgroundColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 static float demoWindowVisible = false;
-static float offset[3] = { 0.0f, 0.0f, 0.0f };
 static float tint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 #pragma endregion
 
@@ -70,18 +69,6 @@ void Game::Initialize()
 		Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
 		Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
 	}
-
-	//calcualate the amount of space our struct needs (next multiple of 16)
-	//unsigned int size = sizeof(VertexShaderData);
-	//size = (size + 15) / 16 * 16;
-	//
-	//// Describe the constant buffer
-	//D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
-	//cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//cbDesc.ByteWidth = size; // Must be a multiple of 16
-	//cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	//cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	//Graphics::Device->CreateBuffer(&cbDesc, 0, constantBuffer.GetAddressOf());
 }
 
 
@@ -205,18 +192,18 @@ void Game::CreateGeometry()
 
 	Vertex squareVertices[] =
 	{
-		{ XMFLOAT3(+0.55f, +0.35f, +0.0f), red },
-		{ XMFLOAT3(+0.85f, +0.35f, +0.0f), blue },
-		{ XMFLOAT3(+0.85f, +0.85f, +0.0f), green },
-		{ XMFLOAT3(+0.55f, +0.85f, +0.0f), blue },
+		{ XMFLOAT3(-0.15f, -0.15f, +0.0f), red },
+		{ XMFLOAT3(+0.15f, -0.15f, +0.0f), blue },
+		{ XMFLOAT3(+0.15f, +0.15f, +0.0f), green },
+		{ XMFLOAT3(-0.15f, +0.15f, +0.0f), blue },
 	};
 
 	Vertex diamondVertices[] =
 	{
-		{ XMFLOAT3(-0.50f, +0.85f, +0.0f), black },
-		{ XMFLOAT3(-0.35f, +0.70f, +0.0f), white },
-		{ XMFLOAT3(-0.50f, +0.55f, +0.0f), black },
-		{ XMFLOAT3(-0.65f, +0.70f, +0.0f), white },
+		{ XMFLOAT3(+0.0f, +0.15f, +0.0f), black },
+		{ XMFLOAT3(+0.15f, +0.0f, +0.0f), white },
+		{ XMFLOAT3(+0.0f, -0.15f, +0.0f), black },
+		{ XMFLOAT3(-0.15f, +0.0f, +0.0f), white },
 	};
 
 	// Set up indices, which tell us which vertices to use and in which order
@@ -229,13 +216,16 @@ void Game::CreateGeometry()
 	unsigned int diamondIndices[] = { 0, 1, 3, 1, 2 ,3 };
 	
 	//create some meshes
-	m_spDefaultTriangle = std::make_shared<Mesh>(defaultTriangleVertices, 3, defaultTriangleIndices, 3);
-	m_spSquare = std::make_shared<Mesh>(squareVertices, 4, squareIndices, 6);
-	m_spDiamond = std::make_shared<Mesh>(diamondVertices, 4, diamondIndices, 6);
-
 	Mesh defaultTriangle = Mesh(defaultTriangleVertices, 3, defaultTriangleIndices, 3);
+	Mesh Square = Mesh(squareVertices, 4, squareIndices, 6);
+	Mesh diamond = Mesh(diamondVertices, 4, diamondIndices, 6);
 
-	m_vEntities.push_back(Entity(defaultTriangle)); 
+	m_vEntities.push_back(Entity(defaultTriangle));  
+	m_vEntities.push_back(Entity(Square));
+	m_vEntities.push_back(Entity(diamond));
+	m_vEntities.push_back(Entity(Square));
+	m_vEntities.push_back(Entity(diamond));
+
 }
 
 
@@ -262,6 +252,14 @@ void Game::Update(float deltaTime, float totalTime)
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
+
+	//m_vEntities[0].GetTransform()->SetPosition((float)sin(totalTime), 0.0f, 0.0f);
+	m_vEntities[1].GetTransform()->SetPosition(0.5f, 0.5f, 0.0f);
+	m_vEntities[2].GetTransform()->SetRotation(0.0f, 0.0f, totalTime);
+	m_vEntities[2].GetTransform()->SetPosition((float)sin(totalTime), (float)sin(totalTime), 0.0f);
+	m_vEntities[3].GetTransform()->SetPosition(-(float)sin(totalTime), (float)sin(totalTime), 0.0f);
+	m_vEntities[4].GetTransform()->SetPosition(-(float)sin(totalTime), -(float)sin(totalTime), 0.0f);
+	m_vEntities[4].GetTransform()->SetScale((float)sin(totalTime) + 1.5, (float)sin(totalTime) + 1.5, 0.0f);
 }
 
  
@@ -280,23 +278,6 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	// Edit Constant buffer
-	//VertexShaderData vsdData;
-	//vsdData.colorTint = XMFLOAT4(tint);
-	////vsdData.offset = XMFLOAT3(offset);
-	//
-	//D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-	//Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-	//
-	//memcpy(mappedBuffer.pData, &vsdData, sizeof(vsdData));
-	//
-	//Graphics::Context->Unmap(constantBuffer.Get(), 0);
-	//
-	//Graphics::Context->VSSetConstantBuffers(
-	//	0, // the slot (register) to bind the buffer to
-	//	1, // number of buffers to set right now
-	//	constantBuffer.GetAddressOf()); // buffer adress
-
 	// DRAW geometry
 	// - These steps are generally repeated for EACH object you draw
 	// - Other Direct3D calls will also be necessary to do more complex things
@@ -308,7 +289,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		//draw all entities
 		for (int i = 0; i < m_vEntities.size(); i++)
 		{
-			m_vEntities[i].Draw(constantBuffer, XMFLOAT4(tint));
+			m_vEntities[i].Draw(m_cpConstantBuffer, XMFLOAT4(tint));
 		}
 	}
 
@@ -431,27 +412,76 @@ void Game::BuildUI()
 	}
 
 	// allow user to edit mesh offset/color
-	ImGui::DragFloat3("Mesh Offset", offset, 0.1f, -1.0f, 1.0f);
+	//ImGui::DragFloat3("Mesh Offset", offset, 0.1f, -1.0f, 1.0f);
 	ImGui::ColorEdit4("Mesh Tint", tint);
 
 	// display info about meshes
-	if(ImGui::CollapsingHeader("Meshes", ImGuiTreeNodeFlags_None))
+	if(ImGui::CollapsingHeader("Entities", ImGuiTreeNodeFlags_None))
 	{
-		if (ImGui::CollapsingHeader("Triangle", ImGuiTreeNodeFlags_None))
+		for (int i = 0; i < m_vEntities.size(); i++)
 		{
-			ImGui::Text("Verticies %u", m_spDefaultTriangle->GetVertexCount());
-			ImGui::Text("Indicies %u", m_spDefaultTriangle->GetIndexCount());
+			//create unique header name
+			std::string sHeaderName = "Entity " + std::to_string(i);
+			if (ImGui::CollapsingHeader(sHeaderName.c_str(), ImGuiTreeNodeFlags_None))
+			{
+				ImGui::Text("Verticies %u", m_vEntities[i].GetMesh()->GetVertexCount());
+				ImGui::Text("Indicies %u", m_vEntities[i].GetMesh()->GetIndexCount());
+
+				// turn the transform position into float[3] so it can be passed into ImGui
+				float f3EntityPosition[3] = {
+					m_vEntities[i].GetTransform()->GetPosition().x,
+					m_vEntities[i].GetTransform()->GetPosition().y,
+					m_vEntities[i].GetTransform()->GetPosition().z };
+
+				//create unique ID for position editor
+				std::string sPositionID = "Entity Position##" + std::to_string(i);
+				ImGui::DragFloat3(sPositionID.c_str(), f3EntityPosition, 0.01f, -1.0f, 1.0f);
+
+				// set the position equal to the edited ImGui position
+				m_vEntities[i].GetTransform()->SetPosition(XMFLOAT3(f3EntityPosition));
+
+				// turn the transform rotation into float[3] so it can be passed into ImGui
+				float f3EntityRotation[3] = {
+					m_vEntities[i].GetTransform()->GetPitchYawRoll().x,
+					m_vEntities[i].GetTransform()->GetPitchYawRoll().y,
+					m_vEntities[i].GetTransform()->GetPitchYawRoll().z };
+
+				//create unique ID for rotation editor
+				std::string sRotationID = "Entity Rotation##" + std::to_string(i);
+				ImGui::DragFloat3(sRotationID.c_str(), f3EntityRotation, 0.1f);
+
+				// set the position equal to the edited ImGui position
+				m_vEntities[i].GetTransform()->SetRotation(XMFLOAT3(f3EntityRotation));
+
+				// turn the transform scale into float[3] so it can be passed into ImGui
+				float f3EntityScale[3] = {
+					m_vEntities[i].GetTransform()->GetScale().x,
+					m_vEntities[i].GetTransform()->GetScale().y,
+					m_vEntities[i].GetTransform()->GetScale().z };
+
+				//create unique ID for scale editor
+				std::string sScaleID = "Entity Scale##" + std::to_string(i);
+				ImGui::DragFloat3(sScaleID.c_str(), f3EntityScale, 0.1f);
+
+				// set the position equal to the edited ImGui position
+				m_vEntities[i].GetTransform()->SetScale(XMFLOAT3(f3EntityScale));
+			}
 		}
-		if (ImGui::CollapsingHeader("Square", ImGuiTreeNodeFlags_None))
-		{
-			ImGui::Text("Verticies %u", m_spSquare->GetVertexCount());
-			ImGui::Text("Indicies %u", m_spSquare->GetIndexCount());
-		}
-		if (ImGui::CollapsingHeader("Diamond", ImGuiTreeNodeFlags_None))
-		{
-			ImGui::Text("Verticies %u", m_spDiamond->GetVertexCount());
-			ImGui::Text("Indicies %u", m_spDiamond->GetIndexCount());
-		}
+		//if (ImGui::CollapsingHeader("Triangle", ImGuiTreeNodeFlags_None))
+		//{
+		//	ImGui::Text("Verticies %u", m_spDefaultTriangle->GetVertexCount());
+		//	ImGui::Text("Indicies %u", m_spDefaultTriangle->GetIndexCount());
+		//}
+		//if (ImGui::CollapsingHeader("Square", ImGuiTreeNodeFlags_None))
+		//{
+		//	ImGui::Text("Verticies %u", m_spSquare->GetVertexCount());
+		//	ImGui::Text("Indicies %u", m_spSquare->GetIndexCount());
+		//}
+		//if (ImGui::CollapsingHeader("Diamond", ImGuiTreeNodeFlags_None))
+		//{
+		//	ImGui::Text("Verticies %u", m_spDiamond->GetVertexCount());
+		//	ImGui::Text("Indicies %u", m_spDiamond->GetIndexCount());
+		//}
 	}
 	ImGui::End(); // Ends the current window
 }

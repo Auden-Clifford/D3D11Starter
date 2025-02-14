@@ -34,9 +34,7 @@ private:
 	//  - More info here: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
 
 	// Buffers to hold actual geometry data
-	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cpConstantBuffer;
 
 	// Shaders and shader-related constructs
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
@@ -49,13 +47,7 @@ private:
 #pragma endregion
 
 #pragma region Temp Variables
-	std::shared_ptr<Mesh> m_spDefaultTriangle;
-	std::shared_ptr<Mesh> m_spSquare;
-	std::shared_ptr<Mesh> m_spDiamond;
-
 	std::vector<Entity> m_vEntities;
 #pragma endregion
-
-	
 };
 
