@@ -4,6 +4,8 @@
 #include <wrl/client.h>
 #include "Mesh.h"
 #include <memory>
+#include "Entity.h"
+#include <vector>
 
 class Game
 {
@@ -50,6 +52,8 @@ private:
 	std::shared_ptr<Mesh> m_spDefaultTriangle;
 	std::shared_ptr<Mesh> m_spSquare;
 	std::shared_ptr<Mesh> m_spDiamond;
+
+	std::vector<Entity> m_vEntities;
 #pragma endregion
 
 	

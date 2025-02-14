@@ -9,7 +9,7 @@ class Entity
 public:
 	Entity(Mesh a_mMesh);
 
-	void Draw(Microsoft::WRL::ComPtr<ID3D11Buffer> a_cpConstantBuffer);
+	void Draw(Microsoft::WRL::ComPtr<ID3D11Buffer> a_cpConstantBuffer, DirectX::XMFLOAT4 a_f4Tint);
 
 	// Getters
 	std::shared_ptr<Mesh> GetMesh();

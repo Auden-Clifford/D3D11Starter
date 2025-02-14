@@ -72,16 +72,16 @@ void Game::Initialize()
 	}
 
 	//calcualate the amount of space our struct needs (next multiple of 16)
-	unsigned int size = sizeof(VertexShaderData);
-	size = (size + 15) / 16 * 16;
-
-	// Describe the constant buffer
-	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.ByteWidth = size; // Must be a multiple of 16
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	Graphics::Device->CreateBuffer(&cbDesc, 0, constantBuffer.GetAddressOf());
+	//unsigned int size = sizeof(VertexShaderData);
+	//size = (size + 15) / 16 * 16;
+	//
+	//// Describe the constant buffer
+	//D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
+	//cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	//cbDesc.ByteWidth = size; // Must be a multiple of 16
+	//cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	//cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	//Graphics::Device->CreateBuffer(&cbDesc, 0, constantBuffer.GetAddressOf());
 }
 
 
@@ -232,6 +232,10 @@ void Game::CreateGeometry()
 	m_spDefaultTriangle = std::make_shared<Mesh>(defaultTriangleVertices, 3, defaultTriangleIndices, 3);
 	m_spSquare = std::make_shared<Mesh>(squareVertices, 4, squareIndices, 6);
 	m_spDiamond = std::make_shared<Mesh>(diamondVertices, 4, diamondIndices, 6);
+
+	Mesh defaultTriangle = Mesh(defaultTriangleVertices, 3, defaultTriangleIndices, 3);
+
+	m_vEntities.push_back(Entity(defaultTriangle)); 
 }
 
 
@@ -277,29 +281,35 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 
 	// Edit Constant buffer
-	VertexShaderData vsdData;
-	vsdData.colorTint = XMFLOAT4(tint);
-	//vsdData.offset = XMFLOAT3(offset);
-
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-	Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-
-	memcpy(mappedBuffer.pData, &vsdData, sizeof(vsdData));
-
-	Graphics::Context->Unmap(constantBuffer.Get(), 0);
-
-	Graphics::Context->VSSetConstantBuffers(
-		0, // the slot (register) to bind the buffer to
-		1, // number of buffers to set right now
-		constantBuffer.GetAddressOf()); // buffer adress
+	//VertexShaderData vsdData;
+	//vsdData.colorTint = XMFLOAT4(tint);
+	////vsdData.offset = XMFLOAT3(offset);
+	//
+	//D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+	//Graphics::Context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+	//
+	//memcpy(mappedBuffer.pData, &vsdData, sizeof(vsdData));
+	//
+	//Graphics::Context->Unmap(constantBuffer.Get(), 0);
+	//
+	//Graphics::Context->VSSetConstantBuffers(
+	//	0, // the slot (register) to bind the buffer to
+	//	1, // number of buffers to set right now
+	//	constantBuffer.GetAddressOf()); // buffer adress
 
 	// DRAW geometry
 	// - These steps are generally repeated for EACH object you draw
 	// - Other Direct3D calls will also be necessary to do more complex things
 	{
-		m_spDefaultTriangle->Draw();
-		m_spSquare->Draw();
-		m_spDiamond->Draw();
+		//m_spDefaultTriangle->Draw();
+		//m_spSquare->Draw();
+		//m_spDiamond->Draw();
+
+		//draw all entities
+		for (int i = 0; i < m_vEntities.size(); i++)
+		{
+			m_vEntities[i].Draw(constantBuffer, XMFLOAT4(tint));
+		}
 	}
 
 	ImGui::Render(); // Turns this frame’s UI into renderable triangles
