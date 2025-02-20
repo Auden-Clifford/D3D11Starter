@@ -13,6 +13,7 @@ Transform::Transform()
 	DirectX::XMStoreFloat4x4(&m_m4WorldInverseTranspose, DirectX::XMMatrixIdentity());
 
 	m_bDirty = false;
+
 }
 
 #pragma region Setters

@@ -40,7 +40,7 @@ void Game::Initialize()
 	ImGui_ImplWin32_Init(Window::Handle());
 	ImGui_ImplDX11_Init(Graphics::Device.Get(), Graphics::Context.Get());
 	// Pick a style (uncomment one of these 3)
-	ImGui::StyleColorsDark();
+	ImGui::StyleColorsDark(); 
 
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
