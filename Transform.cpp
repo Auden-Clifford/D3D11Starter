@@ -79,6 +79,42 @@ void Transform::SetScale(DirectX::XMFLOAT3 a_f3Scale)
 #pragma endregion
 #pragma region Getters
 /// <summary>
+/// Gets the transform's right vector
+/// </summary>
+/// <returns>Right vector</returns>
+DirectX::XMFLOAT3 Transform::GetRight()
+{
+	DirectX::XMVECTOR xvWorldRight = DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+	DirectX::XMVECTOR xvRotation = DirectX::XMQuaternionRotationRollPitchYaw(m_f3Rotation.x, m_f3Rotation.y, m_f3Rotation.z);
+	DirectX::XMFLOAT3 f3LocalRight;
+	XMStoreFloat3(&f3LocalRight, DirectX::XMVector3Rotate(xvWorldRight, xvRotation));
+	return f3LocalRight;
+}
+/// <summary>
+/// Gets the transform's up vector
+/// </summary>
+/// <returns>Up vector</returns>
+DirectX::XMFLOAT3 Transform::GetUp()
+{
+	DirectX::XMVECTOR xvWorldUp = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	DirectX::XMVECTOR xvRotation = DirectX::XMQuaternionRotationRollPitchYaw(m_f3Rotation.x, m_f3Rotation.y, m_f3Rotation.z);
+	DirectX::XMFLOAT3 f3LocalUp;
+	XMStoreFloat3(&f3LocalUp, DirectX::XMVector3Rotate(xvWorldUp, xvRotation));
+	return f3LocalUp;
+}
+/// <summary>
+/// Gets the transform's forward vector
+/// </summary>
+/// <returns>Forward vector</returns>
+DirectX::XMFLOAT3 Transform::GetForward()
+{
+	DirectX::XMVECTOR xvWorldForward = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	DirectX::XMVECTOR xvRotation = DirectX::XMQuaternionRotationRollPitchYaw(m_f3Rotation.x, m_f3Rotation.y, m_f3Rotation.z);
+	DirectX::XMFLOAT3 f3LocalForward;
+	XMStoreFloat3(&f3LocalForward, DirectX::XMVector3Rotate(xvWorldForward, xvRotation));
+	return f3LocalForward;
+}
+/// <summary>
 /// Gets the transform's current position
 /// </summary>
 /// <returns>Current position</returns>
@@ -157,9 +193,35 @@ DirectX::XMFLOAT4X4 Transform::GetWorldInverseTransposeMatrix()
 #pragma endregion
 #pragma region Transformers
 /// <summary>
-/// Moves the transform by the given x, y, and z offsets
+/// Moves the transform by the given x, y, and z offsets in local space
 /// </summary>
-/// <param name="a_fXOffset">X position </param>
+/// <param name="a_fXOffset">X position offset</param>
+/// <param name="a_fYOffset">Y position offset</param>
+/// <param name="a_fZOffset">Z position offset</param>
+void Transform::MoveRelative(float a_fXOffset, float a_fYOffset, float a_fZOffset)
+{
+	DirectX::XMVECTOR xvOffset = DirectX::XMVectorSet(a_fXOffset, a_fYOffset, a_fZOffset, 0.0f);
+	DirectX::XMVECTOR xvRotation = DirectX::XMQuaternionRotationRollPitchYaw(m_f3Rotation.x, m_f3Rotation.y, m_f3Rotation.z);
+	DirectX::XMFLOAT3 f3AbsoluteOffset;
+	XMStoreFloat3(&f3AbsoluteOffset, DirectX::XMVector3Rotate(xvOffset, xvRotation));
+	MoveAbsolute(f3AbsoluteOffset);
+}
+/// <summary>
+/// Moves the transform by the given offset in local space
+/// </summary>
+/// <param name="a_fZOffset">Position offset</param> 
+void Transform::MoveRelative(DirectX::XMFLOAT3 a_f3Offset)
+{
+	DirectX::XMVECTOR xvOffset = DirectX::XMVectorSet(a_f3Offset.x, a_f3Offset.y, a_f3Offset.z, 0.0f);
+	DirectX::XMVECTOR xvRotation = DirectX::XMQuaternionRotationRollPitchYaw(m_f3Rotation.x, m_f3Rotation.y, m_f3Rotation.z);
+	DirectX::XMFLOAT3 f3AbsoluteOffset;
+	XMStoreFloat3(&f3AbsoluteOffset, DirectX::XMVector3Rotate(xvOffset, xvRotation));
+	MoveAbsolute(f3AbsoluteOffset);
+}
+/// <summary>
+/// Moves the transform by the given x, y, and z offsets in world space
+/// </summary>
+/// <param name="a_fXOffset">X position offset</param>
 /// <param name="a_fYOffset">Y position offset</param>
 /// <param name="a_fZOffset">Z position offset</param>
 void Transform::MoveAbsolute(float a_fXOffset, float a_fYOffset, float a_fZOffset)
@@ -170,7 +232,7 @@ void Transform::MoveAbsolute(float a_fXOffset, float a_fYOffset, float a_fZOffse
 	m_bDirty = true;
 }
 /// <summary>
-/// Moves the transform by the given offset
+/// Moves the transform by the given offset in world space
 /// </summary>
 /// <param name="a_f3Offset">Position offset</param>
 void Transform::MoveAbsolute(DirectX::XMFLOAT3 a_f3Offset)
