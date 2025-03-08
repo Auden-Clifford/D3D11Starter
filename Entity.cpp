@@ -18,7 +18,7 @@ Entity::Entity(Mesh a_mMesh)
 	m_spTransform = std::make_shared<Transform>();
 }
 
-void Entity::Draw(Microsoft::WRL::ComPtr<ID3D11Buffer> a_cpConstantBuffer, DirectX::XMFLOAT4 a_f4Tint)
+void Entity::Draw(std::shared_ptr<Camera> a_spCamera, Microsoft::WRL::ComPtr<ID3D11Buffer> a_cpConstantBuffer, DirectX::XMFLOAT4 a_f4Tint)
 {
 	//Bind the Constant Buffer resource for the Vertex Shader stage
 	
@@ -37,6 +37,8 @@ void Entity::Draw(Microsoft::WRL::ComPtr<ID3D11Buffer> a_cpConstantBuffer, Direc
 	VertexShaderData vsdData;
 	vsdData.colorTint = a_f4Tint;
 	vsdData.world = m_spTransform->GetWorldMatrix();
+	vsdData.view = a_spCamera->GetViewMatrix();
+	vsdData.projection = a_spCamera->GetProjectionMatrix();
 
 	//Map / memcpy / Unmap the Constant Buffer resource
 	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {}; 

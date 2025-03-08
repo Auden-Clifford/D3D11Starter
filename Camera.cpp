@@ -55,8 +55,55 @@ DirectX::XMFLOAT4X4 Camera::GetProjectionMatrix()
 {
 	return m_m4Projection;
 }
+/// <summary>
+/// Gets the camera's transform
+/// </summary>
+/// <returns>Transform</returns>
+std::shared_ptr<Transform> Camera::GetTransform()
+{
+	return m_spTransform;
+}
+/// <summary>
+/// Gets the camera's field of view
+/// </summary>
+/// <returns>Field of view</returns>
+float Camera::GetFieldOfView()
+{
+	return m_fFieldOfView;
+}
+/// <summary>
+/// Gets the camera's near clip plane distance
+/// </summary>
+/// <returns>Near clip plane distance</returns>
+float Camera::GetNearClipPlaneDistance()
+{
+	return m_fNearPlaneDistance;
+}
+/// <summary>
+/// Gets the camera's far clip plane distance
+/// </summary>
+/// <returns>Far clip plane distance</returns>
+float Camera::GetFarClipPlaneDistance()
+{
+	return m_fFarPlaneDistance;
+}
+/// <summary>
+/// Gets the camera's movement speed
+/// </summary>
+/// <returns>Movement speed</returns>
+float Camera::GetMovementSpeed()
+{
+	return m_fMovementSpeed;
+}
+/// <summary>
+/// Gets the camera's mouse look speed
+/// </summary>
+/// <returns>Mouse look speed</returns>
+float Camera::GetMouseLookSpeed()
+{
+	return m_fMouseLookSpeed;
+}
 #pragma endregion
-
 #pragma region Updates
 /// <summary>
 /// Updates the projection matrix with the given aspect ratio
@@ -71,10 +118,13 @@ void Camera::UpdateProjectionMatrix(float a_fAspectRatio)
 /// </summary>
 void Camera::UpdateViewMatrix()
 {
+	DirectX::XMFLOAT3 f3Position = m_spTransform->GetPosition();
+	DirectX::XMFLOAT3 f3Forward = m_spTransform->GetForward();
+
 	XMStoreFloat4x4(&m_m4View, DirectX::XMMatrixLookToLH(
-		XMLoadFloat3(&m_spTransform->GetPosition()),
-		XMLoadFloat3(&m_spTransform->GetForward()), 
-		DirectX::XMVECTOR(0.0f, 1.0f, 0.0f, 0.0f))); // world up vector
+		XMLoadFloat3(&f3Position),  
+		XMLoadFloat3(&f3Forward),   
+		DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f))); // world up vector 
 }
 void Camera::Update(float a_fDeltaTime)
 {
@@ -110,13 +160,15 @@ void Camera::Update(float a_fDeltaTime)
 	// get mouse input
 	if (Input::MouseLeftDown())
 	{
-		int cursorMovementX = Input::GetMouseXDelta() * m_fMouseLookSpeed;
-		int cursorMovementY = Input::GetMouseYDelta() * m_fMouseLookSpeed;
+		float cursorMovementX = Input::GetMouseXDelta() * m_fMouseLookSpeed;
+		float cursorMovementY = Input::GetMouseYDelta() * m_fMouseLookSpeed;
 		
 		// clamp x rotation
-		//cursorMovementY = std::clamp(cursorMovementY, m_spTransform->GetPitchYawRoll().x - ( / 2), )
+		cursorMovementY = std::clamp(cursorMovementY, m_spTransform->GetPitchYawRoll().x - (DirectX::XM_PI / 2), (DirectX::XM_PI / 2) - m_spTransform->GetPitchYawRoll().x);
 		m_spTransform->Rotate(cursorMovementY, cursorMovementX, 0.0f);
 	}
+
+	UpdateViewMatrix();
 }
 #pragma endregion
 

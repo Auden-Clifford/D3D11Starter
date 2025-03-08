@@ -48,6 +48,13 @@ void Game::Initialize()
 	LoadShaders();
 	CreateGeometry();
 
+	// create cameras
+	m_vCameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 45.0f, 0.1f, 500.0f, 1.0f, 0.01f));
+	m_vCameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(2.0f, 1.0f, -1.0f), XMFLOAT3(XM_PI / 6, -XM_PI / 6, 0.0f), 20.0f, 0.1f, 500.0f, 1.0f, 0.01f));
+
+	// set the first camera as active
+	m_spActiveCamera = m_vCameras[0];
+
 	// Set initial graphics API state
 	//  - These settings persist until we change them
 	//  - Some of these, like the primitive topology & input layout, probably won't change
@@ -235,6 +242,13 @@ void Game::CreateGeometry()
 // --------------------------------------------------------
 void Game::OnResize()
 {
+	for (int i = 0; i < m_vCameras.size(); i++)
+	{
+		if (m_vCameras[i] != nullptr)
+		{
+			m_vCameras[i]->UpdateProjectionMatrix(Window::AspectRatio());
+		}
+	}
 }
 
 
@@ -243,6 +257,10 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
+	// update camera
+
+	m_spActiveCamera->Update(deltaTime);
+
 	// initialize ImGui frame
 	InitializeNewUIFrame(deltaTime);
 
@@ -256,10 +274,10 @@ void Game::Update(float deltaTime, float totalTime)
 	//m_vEntities[0].GetTransform()->SetPosition((float)sin(totalTime), 0.0f, 0.0f);
 	m_vEntities[1].GetTransform()->SetPosition(0.5f, 0.5f, 0.0f);
 	m_vEntities[2].GetTransform()->SetRotation(0.0f, 0.0f, totalTime);
-	m_vEntities[2].GetTransform()->SetPosition((float)sin(totalTime), (float)sin(totalTime), 0.0f);
-	m_vEntities[3].GetTransform()->SetPosition(-(float)sin(totalTime), (float)sin(totalTime), 0.0f);
-	m_vEntities[4].GetTransform()->SetPosition(-(float)sin(totalTime), -(float)sin(totalTime), 0.0f);
-	m_vEntities[4].GetTransform()->SetScale((float)sin(totalTime) + 1.5, (float)sin(totalTime) + 1.5, 0.0f);
+	m_vEntities[2].GetTransform()->SetPosition(sinf(totalTime), sinf(totalTime), 0.0f);
+	m_vEntities[3].GetTransform()->SetPosition(-sinf(totalTime), sinf(totalTime), 0.0f);
+	m_vEntities[4].GetTransform()->SetPosition(-sinf(totalTime), -sinf(totalTime), 0.0f);
+	m_vEntities[4].GetTransform()->SetScale(sinf(totalTime) + 1.5, sinf(totalTime) + 1.5, 0.0f);
 }
 
  
@@ -289,7 +307,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		//draw all entities
 		for (int i = 0; i < m_vEntities.size(); i++)
 		{
-			m_vEntities[i].Draw(m_cpConstantBuffer, XMFLOAT4(tint));
+			m_vEntities[i].Draw(m_spActiveCamera, m_cpConstantBuffer, XMFLOAT4(tint));
 		}
 	}
 
@@ -364,66 +382,44 @@ void Game::BuildUI()
 		}
 	}
 
-	// allows the user to select a number and doubles it
-	static int number = 0;
-	ImGui::SliderInt("Choose a number", &number, 0, 100);
-	ImGui::Text("That number doubled is %i", number * 2);
-
-	static bool notARobot = false;
-	ImGui::Checkbox("I am not a robot", &notARobot);
-	if (notARobot)
+	static int e = 0;
+	if (ImGui::CollapsingHeader("Cameras", ImGuiTreeNodeFlags_None))
 	{
-		ImGui::Text("Thats just what a robot would say... ");
-	}
-
-	// allows the user to select their favorite color from ROYGBIV, and will judge their choice
-	const char* colors[] = { "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" };
-	static int selectedColorIndex = 0;
-	if (ImGui::BeginListBox("Choose your favorite color"))
-	{
-		for (int i = 0; i < IM_ARRAYSIZE(colors); i++)
+		for (int i = 0; i < m_vCameras.size(); i++)
 		{
-			const bool is_selected = (selectedColorIndex == i);
-			if (ImGui::Selectable(colors[i], is_selected))
-				selectedColorIndex = i;
-
-			/*
-			if (item_highlight && ImGui::IsItemHovered())
-				item_highlighted_idx = n;
-			*/
-
-			// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-			if (is_selected)
-				ImGui::SetItemDefaultFocus();
+			std::string sCameraName = "Camera " + std::to_string(i); 
+			ImGui::Indent(0);
+			ImGui::RadioButton(sCameraName.c_str(), &e, i); 
+			ImGui::Indent();
+			ImGui::Text("Position: %f, %f, %f",
+				m_vCameras[i]->GetTransform()->GetPosition().x,
+				m_vCameras[i]->GetTransform()->GetPosition().y,
+				m_vCameras[i]->GetTransform()->GetPosition().z);
+			ImGui::Text("Orientation: %f, %f, %f",
+				m_vCameras[i]->GetTransform()->GetPitchYawRoll().x,
+				m_vCameras[i]->GetTransform()->GetPitchYawRoll().y,
+				m_vCameras[i]->GetTransform()->GetPitchYawRoll().z);
+			ImGui::Text("FOV: %f", m_vCameras[i]->GetFieldOfView());
+			ImGui::Unindent(); ImGui::Unindent();
 		}
-		ImGui::EndListBox();
-	}
-	ImGui::Text("You selected: %s", colors[selectedColorIndex]);
-
-	switch (selectedColorIndex)
-	{
-	case 0: ImGui::Text("Red is pretty cool"); break;
-	case 1: ImGui::Text("Oh come on, no one's THAT into school spirit"); break;
-	case 2: ImGui::Text("Not valid"); break;
-	case 3: ImGui::Text("Bad choice"); break;
-	case 4: ImGui::Text("Blue is incorrect"); break;
-	case 5: ImGui::Text("That's not a real color"); break;
-	case 6: ImGui::Text("Just say purple"); break;
 	}
 
-	// allow user to edit mesh offset/color
-	//ImGui::DragFloat3("Mesh Offset", offset, 0.1f, -1.0f, 1.0f);
+	m_spActiveCamera = m_vCameras[e];
+
+	// allow user to edit mesh tint
 	ImGui::ColorEdit4("Mesh Tint", tint);
 
 	// display info about meshes
 	if(ImGui::CollapsingHeader("Entities", ImGuiTreeNodeFlags_None))
 	{
+		ImGui::Indent();
 		for (int i = 0; i < m_vEntities.size(); i++)
 		{
 			//create unique header name
 			std::string sHeaderName = "Entity " + std::to_string(i);
 			if (ImGui::CollapsingHeader(sHeaderName.c_str(), ImGuiTreeNodeFlags_None))
 			{
+				ImGui::Indent();;
 				ImGui::Text("Verticies %u", m_vEntities[i].GetMesh()->GetVertexCount());
 				ImGui::Text("Indicies %u", m_vEntities[i].GetMesh()->GetIndexCount());
 
@@ -465,23 +461,10 @@ void Game::BuildUI()
 
 				// set the position equal to the edited ImGui position
 				m_vEntities[i].GetTransform()->SetScale(XMFLOAT3(f3EntityScale));
+				ImGui::Unindent();
 			}
 		}
-		//if (ImGui::CollapsingHeader("Triangle", ImGuiTreeNodeFlags_None))
-		//{
-		//	ImGui::Text("Verticies %u", m_spDefaultTriangle->GetVertexCount());
-		//	ImGui::Text("Indicies %u", m_spDefaultTriangle->GetIndexCount());
-		//}
-		//if (ImGui::CollapsingHeader("Square", ImGuiTreeNodeFlags_None))
-		//{
-		//	ImGui::Text("Verticies %u", m_spSquare->GetVertexCount());
-		//	ImGui::Text("Indicies %u", m_spSquare->GetIndexCount());
-		//}
-		//if (ImGui::CollapsingHeader("Diamond", ImGuiTreeNodeFlags_None))
-		//{
-		//	ImGui::Text("Verticies %u", m_spDiamond->GetVertexCount());
-		//	ImGui::Text("Indicies %u", m_spDiamond->GetIndexCount());
-		//}
+		ImGui::Unindent();
 	}
 	ImGui::End(); // Ends the current window
 }

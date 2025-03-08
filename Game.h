@@ -6,6 +6,7 @@
 #include <memory>
 #include "Entity.h"
 #include <vector>
+#include "Camera.h"
 
 class Game
 {
@@ -41,13 +42,16 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
+
 #pragma region Helper Functions
 	void InitializeNewUIFrame(float a_fDeltaTime);
 	void BuildUI();
 #pragma endregion
 
-#pragma region Temp Variables
+#pragma region Game Objects
 	std::vector<Entity> m_vEntities;
+	std::vector<std::shared_ptr<Camera>> m_vCameras;
+	std::shared_ptr<Camera> m_spActiveCamera;
 #pragma endregion
 };
 

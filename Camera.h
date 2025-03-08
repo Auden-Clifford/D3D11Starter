@@ -14,6 +14,12 @@ public:
 	// Getters
 	DirectX::XMFLOAT4X4 GetViewMatrix();
 	DirectX::XMFLOAT4X4 GetProjectionMatrix();
+	std::shared_ptr<Transform> GetTransform();
+	float GetFieldOfView();
+	float GetNearClipPlaneDistance();
+	float GetFarClipPlaneDistance();
+	float GetMovementSpeed();
+	float GetMouseLookSpeed();
 
 	void UpdateProjectionMatrix(float a_fAspectRatio);
 	void UpdateViewMatrix();
