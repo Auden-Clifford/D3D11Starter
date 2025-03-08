@@ -76,6 +76,19 @@ void Game::Initialize()
 		Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
 		Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
 	}
+
+	//Bind the Constant Buffer resource for the Vertex Shader stage
+
+	//calcualate the amount of space our struct needs (next multiple of 16)
+	unsigned int size = sizeof(VertexShaderData);
+	size = (size + 15) / 16 * 16;
+
+	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.ByteWidth = size; // Must be a multiple of 16
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	Graphics::Device->CreateBuffer(&cbDesc, 0, m_cpConstantBuffer.GetAddressOf());
 }
 
 

@@ -20,18 +20,6 @@ Entity::Entity(Mesh a_mMesh)
 
 void Entity::Draw(std::shared_ptr<Camera> a_spCamera, Microsoft::WRL::ComPtr<ID3D11Buffer> a_cpConstantBuffer, DirectX::XMFLOAT4 a_f4Tint)
 {
-	//Bind the Constant Buffer resource for the Vertex Shader stage
-	
-	//calcualate the amount of space our struct needs (next multiple of 16)
-	unsigned int size = sizeof(VertexShaderData);
-	size = (size + 15) / 16 * 16;
-
-	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.ByteWidth = size; // Must be a multiple of 16
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	Graphics::Device->CreateBuffer(&cbDesc, 0, a_cpConstantBuffer.GetAddressOf());
 
 	//Collect data for the current entity in a C++ struct 
 	VertexShaderData vsdData;
