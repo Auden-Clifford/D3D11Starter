@@ -174,8 +174,14 @@ void Game::CreateGeometry()
 {
 	std::shared_ptr<SimpleVertexShader> spVertexShader = std::make_shared<SimpleVertexShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"VertexShader.cso").c_str());
-	std::shared_ptr<SimplePixelShader> spPixelShader = std::make_shared<SimplePixelShader>(
+	std::shared_ptr<SimplePixelShader> spPixelShaderSolid = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"PixelShader.cso").c_str());
+	std::shared_ptr<SimplePixelShader> spPixelShaderUV = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"DebugUVsPS.cso").c_str());
+	std::shared_ptr<SimplePixelShader> spPixelShaderNormals = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"DebugNormalsPS.cso").c_str());
+	std::shared_ptr<SimplePixelShader> spPixelShaderCustom = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"CustomPS.cso").c_str());
 
 	// Create some temporary variables to represent colors
 	// - Not necessary, just makes things more readable
@@ -186,24 +192,70 @@ void Game::CreateGeometry()
 	XMFLOAT4 white = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	XMFLOAT4 grey = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.5f);
 
-	Material mMat1 = Material(red, spVertexShader, spPixelShader);
-	Material mMat2 = Material(white, spVertexShader, spPixelShader);
-	Material mMat3 = Material(blue, spVertexShader, spPixelShader);
+	Material mMatSolid = Material(red, spVertexShader, spPixelShaderSolid);
+	Material mMatUV = Material(white, spVertexShader, spPixelShaderUV);
+	Material mMatNormals = Material(white, spVertexShader, spPixelShaderNormals);
+	Material mMatCustom = Material(blue, spVertexShader, spPixelShaderCustom);
 
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mMat1));
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMat2));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMatUV));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mMatUV));
 	m_vEntities[1].GetTransform()->SetPosition(3.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mMat3));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mMatUV));
 	m_vEntities[2].GetTransform()->SetPosition(6.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mMat1));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mMatUV));
 	m_vEntities[3].GetTransform()->SetPosition(9.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mMat2));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mMatUV));
 	m_vEntities[4].GetTransform()->SetPosition(12.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mMat3));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mMatUV));
 	m_vEntities[5].GetTransform()->SetPosition(15.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mMat1));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mMatUV));
 	m_vEntities[6].GetTransform()->SetPosition(18.0f, 0.0f, 0.0f);
 
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMatNormals));
+	m_vEntities[7].GetTransform()->SetPosition(0.0f, -3.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mMatNormals));
+	m_vEntities[8].GetTransform()->SetPosition(3.0f, -3.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mMatNormals));
+	m_vEntities[9].GetTransform()->SetPosition(6.0f, -3.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mMatNormals));
+	m_vEntities[10].GetTransform()->SetPosition(9.0f, -3.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mMatNormals));
+	m_vEntities[11].GetTransform()->SetPosition(12.0f, -3.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mMatNormals));
+	m_vEntities[12].GetTransform()->SetPosition(15.0f, -3.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mMatNormals));
+	m_vEntities[13].GetTransform()->SetPosition(18.0f, -3.0f, 0.0f);
+
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMatSolid));
+	m_vEntities[14].GetTransform()->SetPosition(0.0f, -6.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mMatSolid));
+	m_vEntities[15].GetTransform()->SetPosition(3.0f, -6.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mMatSolid));
+	m_vEntities[16].GetTransform()->SetPosition(6.0f, -6.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mMatSolid));
+	m_vEntities[17].GetTransform()->SetPosition(9.0f, -6.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mMatSolid));
+	m_vEntities[18].GetTransform()->SetPosition(12.0f, -6.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mMatSolid));
+	m_vEntities[19].GetTransform()->SetPosition(15.0f, -6.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mMatSolid));
+	m_vEntities[20].GetTransform()->SetPosition(18.0f, -6.0f, 0.0f);
+
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMatCustom));
+	m_vEntities[21].GetTransform()->SetPosition(0.0f, -9.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mMatCustom));
+	m_vEntities[22].GetTransform()->SetPosition(3.0f, -9.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mMatCustom));
+	m_vEntities[23].GetTransform()->SetPosition(6.0f, -9.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mMatCustom));
+	m_vEntities[24].GetTransform()->SetPosition(9.0f, -9.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mMatCustom));
+	m_vEntities[25].GetTransform()->SetPosition(12.0f, -9.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mMatCustom));
+	m_vEntities[26].GetTransform()->SetPosition(15.0f, -9.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mMatCustom));
+	m_vEntities[27].GetTransform()->SetPosition(18.0f, -9.0f, 0.0f);
+	
 	// Set up the vertices of the triangle we would like to draw
 	// - We're going to copy this array, exactly as it exists in CPU memory
 	//    over to a Direct3D-controlled data structure on the GPU (the vertex buffer)
