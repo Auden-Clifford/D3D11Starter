@@ -6,8 +6,9 @@
 #include "Window.h"
 #include "Mesh.h"
 #include "BufferStructs.h"
-
+#include "SimpleShader.h"
 #include <DirectXMath.h>
+#include "Material.h"
 
 // This code assumes files are in "ImGui" subfolder!
 // Adjust as necessary for your own folder structure and project setup
@@ -68,27 +69,27 @@ void Game::Initialize()
 		// Ensure the pipeline knows how to interpret all the numbers stored in
 		// the vertex buffer. For this course, all of your vertices will probably
 		// have the same layout, so we can just set this once at startup.
-		Graphics::Context->IASetInputLayout(inputLayout.Get());
+		//Graphics::Context->IASetInputLayout(inputLayout.Get());
 
 		// Set the active vertex and pixel shaders
 		//  - Once you start applying different shaders to different objects,
 		//    these calls will need to happen multiple times per frame
-		Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
-		Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
+		//Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
+		//Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
 	}
 
 	//Bind the Constant Buffer resource for the Vertex Shader stage
 
 	//calcualate the amount of space our struct needs (next multiple of 16)
-	unsigned int size = sizeof(VertexShaderData);
-	size = (size + 15) / 16 * 16;
+	//unsigned int size = sizeof(VertexShaderData);
+	//size = (size + 15) / 16 * 16;
 
-	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.ByteWidth = size; // Must be a multiple of 16
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	Graphics::Device->CreateBuffer(&cbDesc, 0, m_cpConstantBuffer.GetAddressOf());
+	//D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
+	//cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	//cbDesc.ByteWidth = size; // Must be a multiple of 16
+	//cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	//cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	//Graphics::Device->CreateBuffer(&cbDesc, 0, m_cpConstantBuffer.GetAddressOf());
 }
 
 
@@ -136,17 +137,17 @@ void Game::LoadShaders()
 		D3DReadFileToBlob(FixPath(L"VertexShader.cso").c_str(), &vertexShaderBlob);
 
 		// Create the actual Direct3D shaders on the GPU
-		Graphics::Device->CreatePixelShader(
-			pixelShaderBlob->GetBufferPointer(),	// Pointer to blob's contents
-			pixelShaderBlob->GetBufferSize(),		// How big is that data?
-			0,										// No classes in this shader
-			pixelShader.GetAddressOf());			// Address of the ID3D11PixelShader pointer
+		//Graphics::Device->CreatePixelShader(
+		//	pixelShaderBlob->GetBufferPointer(),	// Pointer to blob's contents
+		//	pixelShaderBlob->GetBufferSize(),		// How big is that data?
+		//	0,										// No classes in this shader
+		//	pixelShader.GetAddressOf());			// Address of the ID3D11PixelShader pointer
 
-		Graphics::Device->CreateVertexShader(
-			vertexShaderBlob->GetBufferPointer(),	// Get a pointer to the blob's contents
-			vertexShaderBlob->GetBufferSize(),		// How big is that data?
-			0,										// No classes in this shader
-			vertexShader.GetAddressOf());			// The address of the ID3D11VertexShader pointer
+		//Graphics::Device->CreateVertexShader(
+		//	vertexShaderBlob->GetBufferPointer(),	// Get a pointer to the blob's contents
+		//	vertexShaderBlob->GetBufferSize(),		// How big is that data?
+		//	0,										// No classes in this shader
+		//	vertexShader.GetAddressOf());			// The address of the ID3D11VertexShader pointer
 	}
 
 	// Create an input layout 
@@ -168,12 +169,12 @@ void Game::LoadShaders()
 		inputElements[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
 
 		// Create the input layout, verifying our description against actual shader code
-		Graphics::Device->CreateInputLayout(
-			inputElements,							// An array of descriptions
-			2,										// How many elements in that array?
-			vertexShaderBlob->GetBufferPointer(),	// Pointer to the code of a shader that uses this layout
-			vertexShaderBlob->GetBufferSize(),		// Size of the shader code that uses this layout
-			inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
+		//Graphics::Device->CreateInputLayout(
+		//	inputElements,							// An array of descriptions
+		//	2,										// How many elements in that array?
+		//	vertexShaderBlob->GetBufferPointer(),	// Pointer to the code of a shader that uses this layout
+		//	vertexShaderBlob->GetBufferSize(),		// Size of the shader code that uses this layout
+		//	inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
 	}
 }
 
@@ -183,6 +184,15 @@ void Game::LoadShaders()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
+	std::shared_ptr<SimpleVertexShader> spVertexShader = std::make_shared<SimpleVertexShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"VertexShader.cso").c_str());
+	std::shared_ptr<SimplePixelShader> spPixelShader = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"PixelShader.cso").c_str());
+
+	Material mMat1 = Material(DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f), spVertexShader, spPixelShader);
+	Material mMat2 = Material(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), spVertexShader, spPixelShader);
+	Material mMat3 = Material(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.5f), spVertexShader, spPixelShader);
+
 	// Create some temporary variables to represent colors
 	// - Not necessary, just makes things more readable
 	XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -320,7 +330,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		//draw all entities
 		for (int i = 0; i < m_vEntities.size(); i++)
 		{
-			m_vEntities[i].Draw(m_spActiveCamera, m_cpConstantBuffer, XMFLOAT4(tint));
+			//m_vEntities[i].Draw(m_spActiveCamera, m_cpConstantBuffer, XMFLOAT4(tint));
 		}
 	}
 

@@ -35,12 +35,12 @@ private:
 	//  - More info here: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
 
 	// Buffers to hold actual geometry data
-	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cpConstantBuffer;
+	//Microsoft::WRL::ComPtr<ID3D11Buffer> m_cpConstantBuffer;
 
 	// Shaders and shader-related constructs
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
+	/*Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;*/
 
 
 #pragma region Helper Functions
