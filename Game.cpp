@@ -393,7 +393,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		//draw all entities
 		for (int i = 0; i < m_vEntities.size(); i++)
 		{
-			m_vEntities[i].Draw(m_spActiveCamera);
+			m_vEntities[i].Draw(m_spActiveCamera, totalTime);
 		}
 	}
 

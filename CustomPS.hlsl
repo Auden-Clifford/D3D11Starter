@@ -19,7 +19,7 @@ struct VertexToPixel
 //constant buffer input
 cbuffer ExternalData : register(b0)
 {
-    float4 colorTint;
+    float totalTime;
 }
 
 // --------------------------------------------------------
@@ -37,5 +37,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
-    return colorTint;
+    return float4(sin(input.screenPosition.x / 4 + totalTime), sin(input.screenPosition.y / 4 + totalTime), sin(totalTime), 1.0);
 }

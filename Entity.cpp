@@ -18,7 +18,7 @@ Entity::Entity(Mesh a_mMesh, Material a_mtMaterial)
 	m_spMaterial = std::make_shared<Material>(a_mtMaterial);
 }
 
-void Entity::Draw(std::shared_ptr<Camera> a_spCamera)
+void Entity::Draw(std::shared_ptr<Camera> a_spCamera, float a_fTotalTime)
 {
 	m_spMaterial->GetVertexShader()->SetShader();
 	m_spMaterial->GetPixelShader()->SetShader();
@@ -30,6 +30,7 @@ void Entity::Draw(std::shared_ptr<Camera> a_spCamera)
 	m_spMaterial->GetVertexShader()->SetMatrix4x4("projection", a_spCamera->GetProjectionMatrix());
 
 	m_spMaterial->GetPixelShader()->SetFloat4("colorTint", m_spMaterial->GetColorTint());
+	m_spMaterial->GetPixelShader()->SetFloat("totalTime", a_fTotalTime);
 
 	//Map / memcpy / Unmap the Constant Buffer resource
 	m_spMaterial->GetVertexShader()->CopyAllBufferData();

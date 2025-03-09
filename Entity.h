@@ -11,7 +11,7 @@ class Entity
 public:
 	Entity(Mesh a_mMesh, Material a_mtMaterial);
 
-	void Draw(std::shared_ptr<Camera> a_spCamera);
+	void Draw(std::shared_ptr<Camera> a_spCamera, float a_fTotalTime);
 
 	// Getters
 	std::shared_ptr<Mesh> GetMesh();
