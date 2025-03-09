@@ -4,15 +4,21 @@
 #include <wrl/client.h>
 #include "Vertex.h"
 #include "Graphics.h"
+#include <vector>
+
 
 class Mesh
 {
 public:
 	// OOP stuff
 	Mesh(Vertex* a_pVerticies, unsigned int a_uVerticiesLength, unsigned int* a_pIndicies, unsigned int a_uIndiciesLength);
+	Mesh(const char* a_sFileName);
 	~Mesh();
 
 	// primary functions
+	void CreateVertexAndIndexBuffers(Vertex* a_pVerticies, unsigned int a_uVerticiesLength, unsigned int* a_pIndicies, unsigned int a_uIndiciesLength);
+
+	// getters
 	Microsoft::WRL::ComPtr<ID3D11Buffer> GetVertexBuffer();
 	Microsoft::WRL::ComPtr<ID3D11Buffer> GetIndexBuffer();
 

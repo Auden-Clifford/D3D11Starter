@@ -6,40 +6,34 @@
 #include "Mesh.h"
 #include "Entity.h"
 #include <d3d11.h>
-#include "BufferStructs.h"
 
 /// <summary>
 /// Creates a new entity with the given mesh and a default transform
 /// </summary>
 /// <param name="a_mMesh">Mesh of this entity</param>
-Entity::Entity(Mesh a_mMesh)
+Entity::Entity(Mesh a_mMesh, Material a_mtMaterial)
 {
 	m_spMesh = std::make_shared<Mesh>(a_mMesh);
 	m_spTransform = std::make_shared<Transform>();
+	m_spMaterial = std::make_shared<Material>(a_mtMaterial);
 }
 
-void Entity::Draw(std::shared_ptr<Camera> a_spCamera, Microsoft::WRL::ComPtr<ID3D11Buffer> a_cpConstantBuffer, DirectX::XMFLOAT4 a_f4Tint)
+void Entity::Draw(std::shared_ptr<Camera> a_spCamera)
 {
+	m_spMaterial->GetVertexShader()->SetShader();
+	m_spMaterial->GetPixelShader()->SetShader();
 
 	//Collect data for the current entity in a C++ struct 
-	VertexShaderData vsdData;
-	vsdData.colorTint = a_f4Tint;
-	vsdData.world = m_spTransform->GetWorldMatrix();
-	vsdData.view = a_spCamera->GetViewMatrix();
-	vsdData.projection = a_spCamera->GetProjectionMatrix();
+	//m_spMaterial->GetVertexShader()->SetFloat4("colorTint", m_spMaterial->GetColorTint()); 
+	m_spMaterial->GetVertexShader()->SetMatrix4x4("world", m_spTransform->GetWorldMatrix()); 
+	m_spMaterial->GetVertexShader()->SetMatrix4x4("view", a_spCamera->GetViewMatrix()); 
+	m_spMaterial->GetVertexShader()->SetMatrix4x4("projection", a_spCamera->GetProjectionMatrix());
+
+	m_spMaterial->GetPixelShader()->SetFloat4("colorTint", m_spMaterial->GetColorTint());
 
 	//Map / memcpy / Unmap the Constant Buffer resource
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {}; 
-	Graphics::Context->Map(a_cpConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer); 
-
-	memcpy(mappedBuffer.pData, &vsdData, sizeof(vsdData)); 
-
-	Graphics::Context->Unmap(a_cpConstantBuffer.Get(), 0); 
-
-	Graphics::Context->VSSetConstantBuffers( 
-		0, // the slot (register) to bind the buffer to
-		1, // number of buffers to set right now 
-		a_cpConstantBuffer.GetAddressOf()); 
+	m_spMaterial->GetVertexShader()->CopyAllBufferData();
+	m_spMaterial->GetPixelShader()->CopyAllBufferData();
 
 	//Set the correct Vertex and Index Buffers
 	//Tell D3D to render using the currently bound resources
@@ -47,12 +41,55 @@ void Entity::Draw(std::shared_ptr<Camera> a_spCamera, Microsoft::WRL::ComPtr<ID3
 }
 
 #pragma region Getters
+/// <summary>
+/// Gets the entity's mesh
+/// </summary>
+/// <returns>Mesh</returns>
 std::shared_ptr<Mesh> Entity::GetMesh()
 {
 	return m_spMesh;
 }
+/// <summary>
+/// Gets the entity's transform
+/// </summary>
+/// <returns>Transform</returns>
 std::shared_ptr<Transform> Entity::GetTransform()
 {
 	return m_spTransform;
 }
+/// <summary>
+/// Gets the entity's material
+/// </summary>
+/// <returns>Material</returns>
+std::shared_ptr<Material> Entity::GetMaterial()
+{
+	return m_spMaterial;
+}
 #pragma endregion
+#pragma region Setters
+/// <summary>
+/// Sets the entity's mesh to the given mesh
+/// </summary>
+/// <param name="a_spMesh">New mesh</param>
+void Entity::SetMesh(std::shared_ptr<Mesh> a_spMesh)
+{
+	m_spMesh = a_spMesh;
+}
+/// <summary>
+/// Sets the entity's transform to the given transform
+/// </summary>
+/// <param name="a_spTransform">New transform</param>
+void Entity::SetTransform(std::shared_ptr<Transform> a_spTransform)
+{
+	m_spTransform = a_spTransform;
+}
+/// <summary>
+/// Sets the entity's material to the given material
+/// </summary>
+/// <param name="a_spMaterial">New material</param>
+void Entity::setMaterial(std::shared_ptr<Material> a_spMaterial)
+{
+	m_spMaterial = a_spMaterial;
+}
+#pragma endregion
+

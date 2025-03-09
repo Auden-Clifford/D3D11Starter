@@ -5,7 +5,6 @@
 #include "PathHelpers.h"
 #include "Window.h"
 #include "Mesh.h"
-#include "BufferStructs.h"
 #include "SimpleShader.h"
 #include <DirectXMath.h>
 #include "Material.h"
@@ -26,7 +25,7 @@ using namespace DirectX;
 #pragma region Temporary Variables
 static float backgroundColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 static float demoWindowVisible = false;
-static float tint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+// static float tint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 #pragma endregion
 
 // --------------------------------------------------------
@@ -50,8 +49,8 @@ void Game::Initialize()
 	CreateGeometry();
 
 	// create cameras
-	m_vCameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 45.0f, 0.1f, 500.0f, 1.0f, 0.01f));
-	m_vCameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(2.0f, 1.0f, -1.0f), XMFLOAT3(XM_PI / 6, -XM_PI / 6, 0.0f), 20.0f, 0.1f, 500.0f, 1.0f, 0.01f));
+	m_vCameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 45.0f, 0.1f, 500.0f, 10.0f, 0.01f));
+	m_vCameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(10.0f, 5.0f, -10.0f), XMFLOAT3(XM_PI / 6, -XM_PI / 6, 0.0f), 20.0f, 0.1f, 500.0f, 10.0f, 0.01f));
 
 	// set the first camera as active
 	m_spActiveCamera = m_vCameras[0];
@@ -77,19 +76,6 @@ void Game::Initialize()
 		//Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
 		//Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
 	}
-
-	//Bind the Constant Buffer resource for the Vertex Shader stage
-
-	//calcualate the amount of space our struct needs (next multiple of 16)
-	//unsigned int size = sizeof(VertexShaderData);
-	//size = (size + 15) / 16 * 16;
-
-	//D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
-	//cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//cbDesc.ByteWidth = size; // Must be a multiple of 16
-	//cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	//cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	//Graphics::Device->CreateBuffer(&cbDesc, 0, m_cpConstantBuffer.GetAddressOf());
 }
 
 
@@ -118,6 +104,7 @@ Game::~Game()
 // --------------------------------------------------------
 void Game::LoadShaders()
 {
+	/*
 	// BLOBs (or Binary Large OBjects) for reading raw data from external files
 	// - This is a simplified way of handling big chunks of external data
 	// - Literally just a big array of bytes read from a file
@@ -176,6 +163,7 @@ void Game::LoadShaders()
 		//	vertexShaderBlob->GetBufferSize(),		// Size of the shader code that uses this layout
 		//	inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
 	}
+	*/
 }
 
 
@@ -189,10 +177,6 @@ void Game::CreateGeometry()
 	std::shared_ptr<SimplePixelShader> spPixelShader = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"PixelShader.cso").c_str());
 
-	Material mMat1 = Material(DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f), spVertexShader, spPixelShader);
-	Material mMat2 = Material(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), spVertexShader, spPixelShader);
-	Material mMat3 = Material(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.5f), spVertexShader, spPixelShader);
-
 	// Create some temporary variables to represent colors
 	// - Not necessary, just makes things more readable
 	XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -200,6 +184,25 @@ void Game::CreateGeometry()
 	XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
 	XMFLOAT4 black = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	XMFLOAT4 white = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	XMFLOAT4 grey = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.5f);
+
+	Material mMat1 = Material(red, spVertexShader, spPixelShader);
+	Material mMat2 = Material(white, spVertexShader, spPixelShader);
+	Material mMat3 = Material(blue, spVertexShader, spPixelShader);
+
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mMat1));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMat2));
+	m_vEntities[1].GetTransform()->SetPosition(3.0f, 0.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mMat3));
+	m_vEntities[2].GetTransform()->SetPosition(6.0f, 0.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mMat1));
+	m_vEntities[3].GetTransform()->SetPosition(9.0f, 0.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mMat2));
+	m_vEntities[4].GetTransform()->SetPosition(12.0f, 0.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mMat3));
+	m_vEntities[5].GetTransform()->SetPosition(15.0f, 0.0f, 0.0f);
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mMat1));
+	m_vEntities[6].GetTransform()->SetPosition(18.0f, 0.0f, 0.0f);
 
 	// Set up the vertices of the triangle we would like to draw
 	// - We're going to copy this array, exactly as it exists in CPU memory
@@ -213,6 +216,7 @@ void Game::CreateGeometry()
 	//    knowing the exact size (in pixels) of the image/window/etc.  
 	// - Long story short: Resizing the window also resizes the triangle,
 	//    since we're describing the triangle in terms of the window itself
+	/*
 	Vertex defaultTriangleVertices[] =
 	{
 		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), red },
@@ -235,26 +239,30 @@ void Game::CreateGeometry()
 		{ XMFLOAT3(+0.0f, -0.15f, +0.0f), black },
 		{ XMFLOAT3(-0.15f, +0.0f, +0.0f), white },
 	};
+	*/
 
 	// Set up indices, which tell us which vertices to use and in which order
 	// - This is redundant for just 3 vertices, but will be more useful later
 	// - Indices are technically not required if the vertices are in the buffer 
 	//    in the correct order and each one will be used exactly once
 	// - But just to see how it's done...
+	/*
 	unsigned int defaultTriangleIndices[] = { 0, 1, 2 };
 	unsigned int squareIndices[] = { 0, 3, 1, 3, 2 ,1 };
 	unsigned int diamondIndices[] = { 0, 1, 3, 1, 2 ,3 };
 	
 	//create some meshes
+	
 	Mesh defaultTriangle = Mesh(defaultTriangleVertices, 3, defaultTriangleIndices, 3);
 	Mesh Square = Mesh(squareVertices, 4, squareIndices, 6);
 	Mesh diamond = Mesh(diamondVertices, 4, diamondIndices, 6);
 
-	m_vEntities.push_back(Entity(defaultTriangle));  
-	m_vEntities.push_back(Entity(Square));
-	m_vEntities.push_back(Entity(diamond));
-	m_vEntities.push_back(Entity(Square));
-	m_vEntities.push_back(Entity(diamond));
+	m_vEntities.push_back(Entity(defaultTriangle, mMat1));  
+	m_vEntities.push_back(Entity(Square, mMat2));
+	m_vEntities.push_back(Entity(diamond, mMat3));
+	m_vEntities.push_back(Entity(Square, mMat1));
+	m_vEntities.push_back(Entity(diamond, mMat2));
+	*/
 
 }
 
@@ -294,6 +302,7 @@ void Game::Update(float deltaTime, float totalTime)
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
 
+	/*
 	//m_vEntities[0].GetTransform()->SetPosition((float)sin(totalTime), 0.0f, 0.0f);
 	m_vEntities[1].GetTransform()->SetPosition(0.5f, 0.5f, 0.0f);
 	m_vEntities[2].GetTransform()->SetRotation(0.0f, 0.0f, totalTime);
@@ -301,6 +310,8 @@ void Game::Update(float deltaTime, float totalTime)
 	m_vEntities[3].GetTransform()->SetPosition(-sinf(totalTime), sinf(totalTime), 0.0f);
 	m_vEntities[4].GetTransform()->SetPosition(-sinf(totalTime), -sinf(totalTime), 0.0f);
 	m_vEntities[4].GetTransform()->SetScale(sinf(totalTime) + 1.5, sinf(totalTime) + 1.5, 0.0f);
+	*/
+	
 }
 
  
@@ -330,7 +341,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		//draw all entities
 		for (int i = 0; i < m_vEntities.size(); i++)
 		{
-			//m_vEntities[i].Draw(m_spActiveCamera, m_cpConstantBuffer, XMFLOAT4(tint));
+			m_vEntities[i].Draw(m_spActiveCamera);
 		}
 	}
 
@@ -429,9 +440,6 @@ void Game::BuildUI()
 
 	m_spActiveCamera = m_vCameras[e];
 
-	// allow user to edit mesh tint
-	ImGui::ColorEdit4("Mesh Tint", tint);
-
 	// display info about meshes
 	if(ImGui::CollapsingHeader("Entities", ImGuiTreeNodeFlags_None))
 	{
@@ -485,6 +493,20 @@ void Game::BuildUI()
 				// set the position equal to the edited ImGui position
 				m_vEntities[i].GetTransform()->SetScale(XMFLOAT3(f3EntityScale));
 				ImGui::Unindent();
+
+				// turn the tint color into float[4] so it can be passed into ImGui
+				float f4EntityTint[4] = {
+					m_vEntities[i].GetMaterial()->GetColorTint().x,
+					m_vEntities[i].GetMaterial()->GetColorTint().y,
+					m_vEntities[i].GetMaterial()->GetColorTint().z,
+					m_vEntities[i].GetMaterial()->GetColorTint().w };
+
+				//create unique ID for position editor
+				std::string sTintID = "Entity Tint##" + std::to_string(i);
+				ImGui::ColorEdit4(sTintID.c_str(), f4EntityTint);
+
+				// set the position equal to the edited ImGui position
+				m_vEntities[i].GetMaterial()->SetColorTint(XMFLOAT4(f4EntityTint));
 			}
 		}
 		ImGui::Unindent();
