@@ -8,6 +8,8 @@
 #include "SimpleShader.h"
 #include <DirectXMath.h>
 #include "Material.h"
+#include "WICTextureLoader.h"
+#include <wrl/client.h>
 
 // This code assumes files are in "ImGui" subfolder!
 // Adjust as necessary for your own folder structure and project setup
@@ -191,6 +193,11 @@ void Game::CreateGeometry()
 	XMFLOAT4 black = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	XMFLOAT4 white = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	XMFLOAT4 grey = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.5f);
+
+	// load textures
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cpSRV;
+
+	HRESULT loadedTexture = DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_rusty_grid/rusty_metal_grid_diff_4k.jpg").c_str(), nullptr, cpSRV.GetAddressOf());
 
 	Material mMatSolid = Material(red, spVertexShader, spPixelShaderSolid);
 	Material mMatUV = Material(white, spVertexShader, spPixelShaderUV);
