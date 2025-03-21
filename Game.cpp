@@ -178,6 +178,8 @@ void Game::CreateGeometry()
 		Graphics::Device, Graphics::Context, FixPath(L"VertexShader.cso").c_str());
 	std::shared_ptr<SimplePixelShader> spPixelShaderSolid = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"PixelShader.cso").c_str());
+	std::shared_ptr<SimplePixelShader> spPixelShaderMultiTexture = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"PixelShaderMultiTexture.cso").c_str());
 	std::shared_ptr<SimplePixelShader> spPixelShaderUV = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"DebugUVsPS.cso").c_str());
 	std::shared_ptr<SimplePixelShader> spPixelShaderNormals = std::make_shared<SimplePixelShader>(
@@ -195,57 +197,93 @@ void Game::CreateGeometry()
 	XMFLOAT4 grey = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.5f);
 
 	// load textures
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cpSRV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetal;
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_rusty_grid/rusty_metal_grid_diff_4k.jpg").c_str(), nullptr, srvMetal.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvBrick; 
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/stone_brick_wall/stone_brick_wall_001_diff_4k.jpg").c_str(), nullptr, srvBrick.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvWood; 
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/rough_wood/rough_wood_diff_4k.jpg").c_str(), nullptr, srvWood.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvCrack;
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/crack_decal.jpg").c_str(), nullptr, srvCrack.GetAddressOf());
+	
+	Microsoft::WRL::ComPtr <ID3D11SamplerState> cpSamplerState;
+	D3D11_SAMPLER_DESC samplerDesc = {};
 
-	HRESULT loadedTexture = DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_rusty_grid/rusty_metal_grid_diff_4k.jpg").c_str(), nullptr, cpSRV.GetAddressOf());
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-	Material mMatSolid = Material(red, spVertexShader, spPixelShaderSolid);
-	Material mMatUV = Material(white, spVertexShader, spPixelShaderUV);
-	Material mMatNormals = Material(white, spVertexShader, spPixelShaderNormals);
+	Graphics::Device.Get()->CreateSamplerState(&samplerDesc, cpSamplerState.GetAddressOf());
+
+	//Material mMatSolid = Material(red, spVertexShader, spPixelShaderSolid);
+	//Material mMatUV = Material(white, spVertexShader, spPixelShaderUV);
+	//Material mMatNormals = Material(white, spVertexShader, spPixelShaderNormals);
 	Material mMatCustom = Material(blue, spVertexShader, spPixelShaderCustom);
 
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMatUV));
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mMatUV));
+	Material mMetal = Material(white, spVertexShader, spPixelShaderSolid);
+	mMetal.AddTextureSRV("SurfaceTexture", srvMetal);
+	mMetal.AddSampler("BasicSampler", cpSamplerState);
+	mMetal.SetUVScale(5.0f, 5.0f);
+	mMetal.SetUVOffset(0.75f, 0.0f);
+
+	Material mBrick = Material(white, spVertexShader, spPixelShaderSolid);
+	mBrick.AddTextureSRV("SurfaceTexture", srvBrick);
+	mBrick.AddSampler("BasicSampler", cpSamplerState);
+	
+	Material mWood = Material(white, spVertexShader, spPixelShaderSolid);
+	mWood.AddTextureSRV("SurfaceTexture", srvWood);
+	mWood.AddSampler("BasicSampler", cpSamplerState);
+
+	Material mCrackedBrick = Material(white, spVertexShader, spPixelShaderMultiTexture);
+	mCrackedBrick.AddTextureSRV("SurfaceTexture", srvBrick);
+	mCrackedBrick.AddTextureSRV("Decal", srvCrack);
+	mCrackedBrick.AddSampler("BasicSampler", cpSamplerState);
+
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMetal));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mMetal));
 	m_vEntities[1].GetTransform()->SetPosition(3.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mMatUV));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mMetal));
 	m_vEntities[2].GetTransform()->SetPosition(6.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mMatUV));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mMetal));
 	m_vEntities[3].GetTransform()->SetPosition(9.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mMatUV));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mMetal));
 	m_vEntities[4].GetTransform()->SetPosition(12.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mMatUV));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mMetal));
 	m_vEntities[5].GetTransform()->SetPosition(15.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mMatUV));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mMetal));
 	m_vEntities[6].GetTransform()->SetPosition(18.0f, 0.0f, 0.0f);
 
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMatNormals));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mCrackedBrick));
 	m_vEntities[7].GetTransform()->SetPosition(0.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mMatNormals));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mBrick));
 	m_vEntities[8].GetTransform()->SetPosition(3.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mMatNormals));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mBrick));
 	m_vEntities[9].GetTransform()->SetPosition(6.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mMatNormals));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mBrick));
 	m_vEntities[10].GetTransform()->SetPosition(9.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mMatNormals));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mBrick));
 	m_vEntities[11].GetTransform()->SetPosition(12.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mMatNormals));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mBrick));
 	m_vEntities[12].GetTransform()->SetPosition(15.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mMatNormals));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mBrick));
 	m_vEntities[13].GetTransform()->SetPosition(18.0f, -3.0f, 0.0f);
 
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMatSolid));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mWood));
 	m_vEntities[14].GetTransform()->SetPosition(0.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mMatSolid));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/helix.obj").c_str()), mWood));
 	m_vEntities[15].GetTransform()->SetPosition(3.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mMatSolid));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/sphere.obj").c_str()), mWood));
 	m_vEntities[16].GetTransform()->SetPosition(6.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mMatSolid));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cylinder.obj").c_str()), mWood));
 	m_vEntities[17].GetTransform()->SetPosition(9.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mMatSolid));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/torus.obj").c_str()), mWood));
 	m_vEntities[18].GetTransform()->SetPosition(12.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mMatSolid));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad_double_sided.obj").c_str()), mWood));
 	m_vEntities[19].GetTransform()->SetPosition(15.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mMatSolid));
+	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/quad.obj").c_str()), mWood));
 	m_vEntities[20].GetTransform()->SetPosition(18.0f, -6.0f, 0.0f);
 
 	m_vEntities.push_back(Entity(Mesh(FixPath("../../Assets/Models/cube.obj").c_str()), mMatCustom));
@@ -499,7 +537,7 @@ void Game::BuildUI()
 
 	m_spActiveCamera = m_vCameras[e];
 
-	// display info about meshes
+	// display info about entities
 	if(ImGui::CollapsingHeader("Entities", ImGuiTreeNodeFlags_None))
 	{
 		ImGui::Indent();
@@ -560,12 +598,51 @@ void Game::BuildUI()
 					m_vEntities[i].GetMaterial()->GetColorTint().z,
 					m_vEntities[i].GetMaterial()->GetColorTint().w };
 
-				//create unique ID for position editor
+				//create unique ID for tint editor
 				std::string sTintID = "Entity Tint##" + std::to_string(i);
 				ImGui::ColorEdit4(sTintID.c_str(), f4EntityTint);
 
-				// set the position equal to the edited ImGui position
+				// set the tint equal to the edited ImGui tint
 				m_vEntities[i].GetMaterial()->SetColorTint(XMFLOAT4(f4EntityTint));
+
+				// turn the UV Scale into float[2] so it can be passed into ImGui
+				float f2EntityUVScale[2] = {
+					m_vEntities[i].GetMaterial()->GetUVScale().x,
+					m_vEntities[i].GetMaterial()->GetUVScale().y
+				};
+
+				//create unique ID for UV Scale editor
+				std::string sUVScaleID = "Entity UV Scale##" + std::to_string(i);
+				ImGui::DragFloat2(sUVScaleID.c_str(), f2EntityUVScale, 0.01f);
+
+				// set the UV Scale equal to the edited ImGui UV Scale
+				m_vEntities[i].GetMaterial()->SetUVScale(XMFLOAT2(f2EntityUVScale));
+
+				// turn the UV Offset into float[2] so it can be passed into ImGui
+				float f2EntityUVOffset[2] = {
+					m_vEntities[i].GetMaterial()->GetUVOffset().x,
+					m_vEntities[i].GetMaterial()->GetUVOffset().y
+				};
+
+				//create unique ID for UV Scale editor
+				std::string sUVOffsetID = "Entity UV Offset##" + std::to_string(i);
+				ImGui::DragFloat2(sUVOffsetID.c_str(), f2EntityUVOffset, 0.01f);
+
+				// set the UV Scale equal to the edited ImGui UV Scale
+				m_vEntities[i].GetMaterial()->SetUVOffset(XMFLOAT2(f2EntityUVOffset));
+
+				ImGui::Indent();
+				//create unique header name
+				std::string sHeaderName = "Textures" + std::to_string(i);
+				if (ImGui::CollapsingHeader(sHeaderName.c_str(), ImGuiTreeNodeFlags_None)) 
+				{
+					// loop through all texture SRVs and display them
+					for (auto& t : m_vEntities[i].GetMaterial()->GetTextureSRVs())
+					{
+						ImGui::Image((ImTextureID)(intptr_t)t.second.Get(), ImVec2(512, 512));
+					}
+				}
+				ImGui::Unindent();
 			}
 		}
 		ImGui::Unindent();

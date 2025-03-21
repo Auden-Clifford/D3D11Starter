@@ -1,5 +1,6 @@
 // texture and sampler
-Texture2D SurfaceTexture : register(t0); 
+Texture2D SurfaceTexture : register(t0);
+Texture2D Decal : register(t1);
 SamplerState BasicSampler : register(s0);
 
 // Struct representing the data we expect to receive from earlier pipeline stages
@@ -14,9 +15,9 @@ struct VertexToPixel
 	//  |   Name          Semantic
 	//  |    |                |
 	//  v    v                v
-	float4 screenPosition	: SV_POSITION;
-    float2 uv				: TEXCOORD;
-    float3 normal			: NORMAL;
+    float4 screenPosition : SV_POSITION;
+    float2 uv : TEXCOORD;
+    float3 normal : NORMAL;
 	//float4 color			: COLOR;
 };
 
@@ -40,8 +41,8 @@ cbuffer ExternalData : register(b0)
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	// sample the texture 
-    float4 surfaceColor = SurfaceTexture.Sample(BasicSampler, input.uv * uvScale + uvOffset); 
+    float4 surfaceColor = SurfaceTexture.Sample(BasicSampler, input.uv * uvScale + uvOffset) * Decal.Sample(BasicSampler, input.uv * uvScale + uvOffset);
 	
 	// return texture color multiplied by tint
-    return surfaceColor * colorTint; 
+    return surfaceColor * colorTint;
 }

@@ -30,11 +30,17 @@ void Entity::Draw(std::shared_ptr<Camera> a_spCamera, float a_fTotalTime)
 	m_spMaterial->GetVertexShader()->SetMatrix4x4("projection", a_spCamera->GetProjectionMatrix());
 
 	m_spMaterial->GetPixelShader()->SetFloat4("colorTint", m_spMaterial->GetColorTint());
+	m_spMaterial->GetPixelShader()->SetFloat2("uvScale", m_spMaterial->GetUVScale());
+	m_spMaterial->GetPixelShader()->SetFloat2("uvOffset", m_spMaterial->GetUVOffset());
 	m_spMaterial->GetPixelShader()->SetFloat("totalTime", a_fTotalTime);
+	
 
 	//Map / memcpy / Unmap the Constant Buffer resource
 	m_spMaterial->GetVertexShader()->CopyAllBufferData();
 	m_spMaterial->GetPixelShader()->CopyAllBufferData();
+
+	// bind texture & sampler
+	m_spMaterial->PrepareMaterial();
 
 	//Set the correct Vertex and Index Buffers
 	//Tell D3D to render using the currently bound resources
