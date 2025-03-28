@@ -57,6 +57,41 @@ void Game::Initialize()
 	// set the first camera as active
 	m_spActiveCamera = m_vCameras[0];
 
+	// set the ambient light
+	m_f3AmbientLight = XMFLOAT3(.15, .20, .30);
+
+	// set the other lights
+	Light DirectionalLight1 = {};
+	DirectionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
+	DirectionalLight1.Direction = DirectX::XMFLOAT3(1, -1, 0);
+	DirectionalLight1.Color = DirectX::XMFLOAT3(0.2, 0.2, 1);
+	DirectionalLight1.Intensity = 1.0;
+	m_vLights.push_back(DirectionalLight1);
+	Light DirectionalLight2 = {};
+	DirectionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
+	DirectionalLight2.Direction = DirectX::XMFLOAT3(1, 1, 0.5);
+	DirectionalLight2.Color = DirectX::XMFLOAT3(1, 0.2, 0.2);
+	DirectionalLight2.Intensity = 1.0;
+	m_vLights.push_back(DirectionalLight2);
+	Light DirectionalLight3 = {};
+	DirectionalLight3.Type = LIGHT_TYPE_DIRECTIONAL;
+	DirectionalLight3.Direction = DirectX::XMFLOAT3(-1, 1, 0);
+	DirectionalLight3.Color = DirectX::XMFLOAT3(0.2, 1, 0.2);
+	DirectionalLight3.Intensity = 1.0;
+	m_vLights.push_back(DirectionalLight3);
+	Light DirectionalLight4 = {};
+	DirectionalLight4.Type = LIGHT_TYPE_DIRECTIONAL;
+	DirectionalLight4.Direction = DirectX::XMFLOAT3(-1, -1, 0);
+	DirectionalLight4.Color = DirectX::XMFLOAT3(0.5, 0.2, 1);
+	DirectionalLight4.Intensity = 0.5;
+	m_vLights.push_back(DirectionalLight4);
+	Light DirectionalLight5 = {};
+	DirectionalLight5.Type = LIGHT_TYPE_DIRECTIONAL;
+	DirectionalLight5.Direction = DirectX::XMFLOAT3(0, 1, -1);
+	DirectionalLight5.Color = DirectX::XMFLOAT3(0.5, 1, 1);
+	DirectionalLight5.Intensity = 0.3;
+	m_vLights.push_back(DirectionalLight5);
+
 	// Set initial graphics API state
 	//  - These settings persist until we change them
 	//  - Some of these, like the primitive topology & input layout, probably won't change
@@ -221,27 +256,27 @@ void Game::CreateGeometry()
 	//Material mMatSolid = Material(red, spVertexShader, spPixelShaderSolid);
 	//Material mMatUV = Material(white, spVertexShader, spPixelShaderUV);
 	//Material mMatNormals = Material(white, spVertexShader, spPixelShaderNormals);
-	std::shared_ptr<Material> spMatCustom = std::make_shared<Material>(blue, spVertexShader, spPixelShaderCustom);
+	std::shared_ptr<Material> spMatCustom = std::make_shared<Material>(blue, spVertexShader, spPixelShaderCustom, 1.0f);
 	//Material mMatCustom = Material(blue, spVertexShader, spPixelShaderCustom);
 
-	std::shared_ptr<Material> spMatMetal = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid);
+	std::shared_ptr<Material> spMatMetal = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.5);
 	//Material mMetal = Material(white, spVertexShader, spPixelShaderSolid);
 	spMatMetal->AddTextureSRV("SurfaceTexture", srvMetal);
 	spMatMetal->AddSampler("BasicSampler", cpSamplerState);
 	spMatMetal->SetUVScale(5.0f, 5.0f);
 	spMatMetal->SetUVOffset(0.75f, 0.0f);
 
-	std::shared_ptr<Material> spMatBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid);
+	std::shared_ptr<Material> spMatBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.7);
 	//Material mBrick = Material(white, spVertexShader, spPixelShaderSolid);
 	spMatBrick->AddTextureSRV("SurfaceTexture", srvBrick);
 	spMatBrick->AddSampler("BasicSampler", cpSamplerState);
 	
-	std::shared_ptr<Material> spMatWood = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid);
+	std::shared_ptr<Material> spMatWood = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.95);
 	//Material mWood = Material(white, spVertexShader, spPixelShaderSolid);
 	spMatWood->AddTextureSRV("SurfaceTexture", srvWood);
 	spMatWood->AddSampler("BasicSampler", cpSamplerState);
 
-	std::shared_ptr<Material> spMatCrackedBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderMultiTexture);
+	std::shared_ptr<Material> spMatCrackedBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderMultiTexture, 0.4);
 	//Material mCrackedBrick = Material(white, spVertexShader, spPixelShaderMultiTexture);
 	spMatCrackedBrick->AddTextureSRV("SurfaceTexture", srvBrick);
 	spMatCrackedBrick->AddTextureSRV("Decal", srvCrack);
@@ -451,6 +486,13 @@ void Game::Draw(float deltaTime, float totalTime)
 		//draw all entities
 		for (int i = 0; i < m_vEntities.size(); i++)
 		{
+			// send the ambient light to the entity's pixel shader
+			m_vEntities[i].GetMaterial()->GetPixelShader()->SetFloat3("ambient", m_f3AmbientLight);
+
+			// send directional light to entity's pixel shader
+			m_vEntities[i].GetMaterial()->GetPixelShader()->SetData("lights", &m_vLights[0], sizeof(Light) * (int)m_vLights.size());
+			//m_vEntities[i].GetMaterial()->GetPixelShader()->CopyAllBufferData();
+
 			m_vEntities[i].Draw(m_spActiveCamera, totalTime);
 		}
 	}

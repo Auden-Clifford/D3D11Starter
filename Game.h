@@ -7,6 +7,7 @@
 #include "Entity.h"
 #include <vector>
 #include "Camera.h"
+#include "Lights.h"
 
 class Game
 {
@@ -42,6 +43,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;*/
 
+	DirectX::XMFLOAT3 m_f3AmbientLight;
+
 
 #pragma region Helper Functions
 	void InitializeNewUIFrame(float a_fDeltaTime);
@@ -52,6 +55,7 @@ private:
 	std::vector<Entity> m_vEntities;
 	std::vector<std::shared_ptr<Camera>> m_vCameras;
 	std::shared_ptr<Camera> m_spActiveCamera;
+	std::vector<Light> m_vLights;
 #pragma endregion
 };
 

@@ -25,13 +25,16 @@ void Entity::Draw(std::shared_ptr<Camera> a_spCamera, float a_fTotalTime)
 
 	//Collect data for the current entity in a C++ struct 
 	//m_spMaterial->GetVertexShader()->SetFloat4("colorTint", m_spMaterial->GetColorTint()); 
-	m_spMaterial->GetVertexShader()->SetMatrix4x4("world", m_spTransform->GetWorldMatrix()); 
+	m_spMaterial->GetVertexShader()->SetMatrix4x4("world", m_spTransform->GetWorldMatrix());
+	m_spMaterial->GetVertexShader()->SetMatrix4x4("worldInvTranspose", m_spTransform->GetWorldInverseTransposeMatrix());
 	m_spMaterial->GetVertexShader()->SetMatrix4x4("view", a_spCamera->GetViewMatrix()); 
 	m_spMaterial->GetVertexShader()->SetMatrix4x4("projection", a_spCamera->GetProjectionMatrix());
 
 	m_spMaterial->GetPixelShader()->SetFloat4("colorTint", m_spMaterial->GetColorTint());
 	m_spMaterial->GetPixelShader()->SetFloat2("uvScale", m_spMaterial->GetUVScale());
 	m_spMaterial->GetPixelShader()->SetFloat2("uvOffset", m_spMaterial->GetUVOffset());
+	m_spMaterial->GetPixelShader()->SetFloat("roughness", m_spMaterial->GetRoughness());
+	m_spMaterial->GetPixelShader()->SetFloat3("cameraPos", a_spCamera->GetTransform()->GetPosition());
 	m_spMaterial->GetPixelShader()->SetFloat("totalTime", a_fTotalTime);
 	
 

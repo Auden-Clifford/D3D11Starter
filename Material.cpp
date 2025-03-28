@@ -3,12 +3,14 @@
 #include <DirectXMath.h>
 #include <memory>
 #include "SimpleShader.h"
+#include <algorithm>
 
-Material::Material(DirectX::XMFLOAT4 a_f4ColorTint, std::shared_ptr<SimpleVertexShader> a_spVertexShader, std::shared_ptr<SimplePixelShader> a_spPixelShader)
+Material::Material(DirectX::XMFLOAT4 a_f4ColorTint, std::shared_ptr<SimpleVertexShader> a_spVertexShader, std::shared_ptr<SimplePixelShader> a_spPixelShader, float a_fRoughness)
 {
 	m_f4ColorTint = a_f4ColorTint;
 	m_spVertexShader = a_spVertexShader;
 	m_spPixelShader = a_spPixelShader;
+	m_fRoughness = std::clamp(a_fRoughness, 0.0f, 1.0f);
 
 	// default UV scale and offset
 	m_f2UVScale = DirectX::XMFLOAT2(1, 1);
@@ -98,6 +100,14 @@ std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>
 std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11SamplerState>> Material::GetSamplers()
 {
 	return m_htSamplers;
+}
+/// <summary>
+/// Gets this material's roughness
+/// </summary>
+/// <returns></returns>
+float Material::GetRoughness()
+{
+	return m_fRoughness;
 }
 #pragma endregion
 #pragma region Setters
