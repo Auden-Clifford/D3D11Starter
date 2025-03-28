@@ -163,5 +163,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="LightingEquations.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="ShaderStructs.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

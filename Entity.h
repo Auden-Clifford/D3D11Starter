@@ -9,7 +9,7 @@
 class Entity
 {
 public:
-	Entity(Mesh a_mMesh, Material a_mtMaterial);
+	Entity(std::shared_ptr<Mesh> a_spMesh, std::shared_ptr<Material> a_spMaterial);
 
 	void Draw(std::shared_ptr<Camera> a_spCamera, float a_fTotalTime);
 

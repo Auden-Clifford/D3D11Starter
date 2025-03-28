@@ -11,11 +11,11 @@
 /// Creates a new entity with the given mesh and a default transform
 /// </summary>
 /// <param name="a_mMesh">Mesh of this entity</param>
-Entity::Entity(Mesh a_mMesh, Material a_mtMaterial)
+Entity::Entity(std::shared_ptr<Mesh> a_spMesh, std::shared_ptr<Material> a_spMaterial)
 {
-	m_spMesh = std::make_shared<Mesh>(a_mMesh);
+	m_spMesh = a_spMesh;
 	m_spTransform = std::make_shared<Transform>();
-	m_spMaterial = std::make_shared<Material>(a_mtMaterial);
+	m_spMaterial = a_spMaterial;
 }
 
 void Entity::Draw(std::shared_ptr<Camera> a_spCamera, float a_fTotalTime)

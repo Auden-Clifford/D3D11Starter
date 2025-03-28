@@ -244,7 +244,9 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="LightingEquations.hlsli" />
     <None Include="packages.config" />
+    <None Include="ShaderStructs.hlsli" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
