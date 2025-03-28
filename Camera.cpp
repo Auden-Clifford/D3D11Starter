@@ -163,9 +163,14 @@ void Camera::Update(float a_fDeltaTime)
 		float cursorMovementX = Input::GetMouseXDelta() * m_fMouseLookSpeed;
 		float cursorMovementY = Input::GetMouseYDelta() * m_fMouseLookSpeed;
 		
-		// clamp x rotation
-		cursorMovementY = std::clamp(cursorMovementY, m_spTransform->GetPitchYawRoll().x - (DirectX::XM_PI / 2), (DirectX::XM_PI / 2) - m_spTransform->GetPitchYawRoll().x);
-		m_spTransform->Rotate(cursorMovementY, cursorMovementX, 0.0f);
+		// Apply the rotation
+		float newPitch = m_spTransform->GetPitchYawRoll().x + cursorMovementY;
+		float newYaw = m_spTransform->GetPitchYawRoll().y + cursorMovementX;
+
+		// Clamp the pitch to the range [-PI/2, PI/2] to prevent over-rotation
+		newPitch = std::clamp(newPitch, (-DirectX::XM_PI / 2) + 0.01f, (DirectX::XM_PI / 2) - 0.01f);
+
+		m_spTransform->SetRotation(newPitch, newYaw, 0.0f);
 	}
 
 	UpdateViewMatrix();

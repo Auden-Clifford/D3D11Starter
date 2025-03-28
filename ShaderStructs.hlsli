@@ -36,7 +36,7 @@ struct Light
     float3 Color;           // All lights need a color
     float SpotInnerAngle;   // Inner cone angle (in radians) – Inside this, full light!
     float SpotOuterAngle;   // Outer cone angle (radians) – Outside this, no light!
-    float3 Padding;         // Purposefully padding to hit the 16-byte boundary
+    float2 Padding;         // Purposefully padding to hit the 16-byte boundary
 };
 
 // ALL of your code pieces (structs, functions, etc.) go here!

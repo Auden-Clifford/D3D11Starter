@@ -42,11 +42,11 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     // calculate light from all lights
     float3 result = float3(0, 0, 0);
-    //for (int i = 0; i < 5; i++)
-    //{
-    //    result += CalculateDirectional(lights[i], input.normal, surfaceColor, roughness, cameraPos, view);
-    //}
+    for (int i = 0; i < 5; i++)
+    {
+        result += CalculateDirectional(lights[i], input.normal, surfaceColor, roughness, cameraPos, view);
+    }
     
 	// return texture color multiplied by tint
-    return float4(CalculateDirectional(lights[0], input.normal, surfaceColor, roughness, cameraPos, view) + ambientTerm, 1);
+    return float4(result + ambientTerm, 1);
 }
