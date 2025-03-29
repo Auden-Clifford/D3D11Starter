@@ -25,7 +25,7 @@
 using namespace DirectX;
 
 #pragma region Temporary Variables
-static float backgroundColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+static float backgroundColor[4] = { .015f, .020f, .030f, 0.0f };
 static float demoWindowVisible = false;
 // static float tint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 #pragma endregion
@@ -58,7 +58,7 @@ void Game::Initialize()
 	m_spActiveCamera = m_vCameras[0];
 
 	// set the ambient light
-	m_f3AmbientLight = XMFLOAT3(.15, .20, .30);
+	m_f3AmbientLight = XMFLOAT3(.025, .030, .040);
 
 	// set the other lights
 	Light DirectionalLight1 = {};
@@ -73,24 +73,36 @@ void Game::Initialize()
 	DirectionalLight2.Color = DirectX::XMFLOAT3(1, 0.2, 0.2);
 	DirectionalLight2.Intensity = 1.0;
 	m_vLights.push_back(DirectionalLight2);
-	Light DirectionalLight3 = {};
-	DirectionalLight3.Type = LIGHT_TYPE_DIRECTIONAL;
-	DirectionalLight3.Direction = DirectX::XMFLOAT3(-1, 1, 0);
-	DirectionalLight3.Color = DirectX::XMFLOAT3(0.2, 1, 0.2);
-	DirectionalLight3.Intensity = 1.0;
-	m_vLights.push_back(DirectionalLight3);
-	Light DirectionalLight4 = {};
-	DirectionalLight4.Type = LIGHT_TYPE_DIRECTIONAL;
-	DirectionalLight4.Direction = DirectX::XMFLOAT3(-1, -1, 0);
-	DirectionalLight4.Color = DirectX::XMFLOAT3(0.5, 0.2, 1);
-	DirectionalLight4.Intensity = 0.5;
-	m_vLights.push_back(DirectionalLight4);
-	Light DirectionalLight5 = {};
-	DirectionalLight5.Type = LIGHT_TYPE_DIRECTIONAL;
-	DirectionalLight5.Direction = DirectX::XMFLOAT3(0, 1, -1);
-	DirectionalLight5.Color = DirectX::XMFLOAT3(0.5, 1, 1);
-	DirectionalLight5.Intensity = 0.3;
-	m_vLights.push_back(DirectionalLight5);
+	
+	
+	Light PointLight1 = {};
+	PointLight1.Type = LIGHT_TYPE_POINT;
+	//DirectionalLight5.Direction = DirectX::XMFLOAT3(0, 1, -1);
+	PointLight1.Position = DirectX::XMFLOAT3(-5, 5, 0);
+	PointLight1.Range = 20;
+	PointLight1.Color = DirectX::XMFLOAT3(1, 1, 0);
+	PointLight1.Intensity = 2;
+	m_vLights.push_back(PointLight1);
+
+	Light PointLight2 = {};
+	PointLight2.Type = LIGHT_TYPE_POINT;
+	//DirectionalLight5.Direction = DirectX::XMFLOAT3(0, 1, -1);
+	PointLight2.Position = DirectX::XMFLOAT3(25, -15, 3);
+	PointLight2.Range = 60;
+	PointLight2.Color = DirectX::XMFLOAT3(0.5, 0.2, 1);
+	PointLight2.Intensity = 0.5;
+	m_vLights.push_back(PointLight2);
+
+	Light SpotLight1 = {};
+	SpotLight1.Type = LIGHT_TYPE_SPOT;
+	SpotLight1.Position = DirectX::XMFLOAT3(15, 2, 0);
+	SpotLight1.Range = 60;
+	SpotLight1.Direction = DirectX::XMFLOAT3(0, -1, 0);
+	SpotLight1.Color = DirectX::XMFLOAT3(0.2, 1, 0.2);
+	SpotLight1.Intensity = 2.0;
+	SpotLight1.SpotInnerAngle = 0.2;
+	SpotLight1.SpotOuterAngle = 0.5;
+	m_vLights.push_back(SpotLight1);
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -256,7 +268,7 @@ void Game::CreateGeometry()
 	//Material mMatSolid = Material(red, spVertexShader, spPixelShaderSolid);
 	//Material mMatUV = Material(white, spVertexShader, spPixelShaderUV);
 	//Material mMatNormals = Material(white, spVertexShader, spPixelShaderNormals);
-	std::shared_ptr<Material> spMatCustom = std::make_shared<Material>(blue, spVertexShader, spPixelShaderCustom, 1.0f);
+	//std::shared_ptr<Material> spMatCustom = std::make_shared<Material>(blue, spVertexShader, spPixelShaderCustom, 1.0f);
 	//Material mMatCustom = Material(blue, spVertexShader, spPixelShaderCustom);
 
 	std::shared_ptr<Material> spMatMetal = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.5);
@@ -276,11 +288,11 @@ void Game::CreateGeometry()
 	spMatWood->AddTextureSRV("SurfaceTexture", srvWood);
 	spMatWood->AddSampler("BasicSampler", cpSamplerState);
 
-	std::shared_ptr<Material> spMatCrackedBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderMultiTexture, 0.4);
-	//Material mCrackedBrick = Material(white, spVertexShader, spPixelShaderMultiTexture);
-	spMatCrackedBrick->AddTextureSRV("SurfaceTexture", srvBrick);
-	spMatCrackedBrick->AddTextureSRV("Decal", srvCrack);
-	spMatCrackedBrick->AddSampler("BasicSampler", cpSamplerState);
+	//std::shared_ptr<Material> spMatCrackedBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderMultiTexture, 0.4);
+	////Material mCrackedBrick = Material(white, spVertexShader, spPixelShaderMultiTexture);
+	//spMatCrackedBrick->AddTextureSRV("SurfaceTexture", srvBrick);
+	//spMatCrackedBrick->AddTextureSRV("Decal", srvCrack);
+	//spMatCrackedBrick->AddSampler("BasicSampler", cpSamplerState);
 
 	std::shared_ptr<Mesh> spMeshCube = std::make_shared<Mesh>(FixPath("../../Assets/Models/cube.obj").c_str());
 	std::shared_ptr<Mesh> spMeshHelix = std::make_shared<Mesh>(FixPath("../../Assets/Models/helix.obj").c_str());
@@ -304,7 +316,7 @@ void Game::CreateGeometry()
 	m_vEntities.push_back(Entity(spMeshQuad, spMatMetal));
 	m_vEntities[6].GetTransform()->SetPosition(18.0f, 0.0f, 0.0f);
 
-	m_vEntities.push_back(Entity(spMeshCube, spMatCrackedBrick));
+	m_vEntities.push_back(Entity(spMeshCube, spMatBrick));
 	m_vEntities[7].GetTransform()->SetPosition(0.0f, -3.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshHelix, spMatBrick));
 	m_vEntities[8].GetTransform()->SetPosition(3.0f, -3.0f, 0.0f);
@@ -333,81 +345,6 @@ void Game::CreateGeometry()
 	m_vEntities[19].GetTransform()->SetPosition(15.0f, -6.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshQuad, spMatWood));
 	m_vEntities[20].GetTransform()->SetPosition(18.0f, -6.0f, 0.0f);
-
-	m_vEntities.push_back(Entity(spMeshCube, spMatCustom));
-	m_vEntities[21].GetTransform()->SetPosition(0.0f, -9.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshHelix, spMatCustom));
-	m_vEntities[22].GetTransform()->SetPosition(3.0f, -9.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshSphere, spMatCustom));
-	m_vEntities[23].GetTransform()->SetPosition(6.0f, -9.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshCylinder, spMatCustom));
-	m_vEntities[24].GetTransform()->SetPosition(9.0f, -9.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshTorus, spMatCustom));
-	m_vEntities[25].GetTransform()->SetPosition(12.0f, -9.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshQuadDouble, spMatCustom));
-	m_vEntities[26].GetTransform()->SetPosition(15.0f, -9.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshQuad, spMatCustom));
-	m_vEntities[27].GetTransform()->SetPosition(18.0f, -9.0f, 0.0f);
-	
-	// Set up the vertices of the triangle we would like to draw
-	// - We're going to copy this array, exactly as it exists in CPU memory
-	//    over to a Direct3D-controlled data structure on the GPU (the vertex buffer)
-	// - Note: Since we don't have a camera or really any concept of
-	//    a "3d world" yet, we're simply describing positions within the
-	//    bounds of how the rasterizer sees our screen: [-1 to +1] on X and Y
-	// - This means (0,0) is at the very center of the screen.
-	// - These are known as "Normalized Device Coordinates" or "Homogeneous 
-	//    Screen Coords", which are ways to describe a position without
-	//    knowing the exact size (in pixels) of the image/window/etc.  
-	// - Long story short: Resizing the window also resizes the triangle,
-	//    since we're describing the triangle in terms of the window itself
-	/*
-	Vertex defaultTriangleVertices[] =
-	{
-		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), red },
-		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), blue },
-		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), green },
-	};
-
-	Vertex squareVertices[] =
-	{
-		{ XMFLOAT3(-0.15f, -0.15f, +0.0f), red },
-		{ XMFLOAT3(+0.15f, -0.15f, +0.0f), blue },
-		{ XMFLOAT3(+0.15f, +0.15f, +0.0f), green },
-		{ XMFLOAT3(-0.15f, +0.15f, +0.0f), blue },
-	};
-
-	Vertex diamondVertices[] =
-	{
-		{ XMFLOAT3(+0.0f, +0.15f, +0.0f), black },
-		{ XMFLOAT3(+0.15f, +0.0f, +0.0f), white },
-		{ XMFLOAT3(+0.0f, -0.15f, +0.0f), black },
-		{ XMFLOAT3(-0.15f, +0.0f, +0.0f), white },
-	};
-	*/
-
-	// Set up indices, which tell us which vertices to use and in which order
-	// - This is redundant for just 3 vertices, but will be more useful later
-	// - Indices are technically not required if the vertices are in the buffer 
-	//    in the correct order and each one will be used exactly once
-	// - But just to see how it's done...
-	/*
-	unsigned int defaultTriangleIndices[] = { 0, 1, 2 };
-	unsigned int squareIndices[] = { 0, 3, 1, 3, 2 ,1 };
-	unsigned int diamondIndices[] = { 0, 1, 3, 1, 2 ,3 };
-	
-	//create some meshes
-	
-	Mesh defaultTriangle = Mesh(defaultTriangleVertices, 3, defaultTriangleIndices, 3);
-	Mesh Square = Mesh(squareVertices, 4, squareIndices, 6);
-	Mesh diamond = Mesh(diamondVertices, 4, diamondIndices, 6);
-
-	m_vEntities.push_back(Entity(defaultTriangle, mMat1));  
-	m_vEntities.push_back(Entity(Square, mMat2));
-	m_vEntities.push_back(Entity(diamond, mMat3));
-	m_vEntities.push_back(Entity(Square, mMat1));
-	m_vEntities.push_back(Entity(diamond, mMat2));
-	*/
 
 }
 
@@ -602,7 +539,7 @@ void Game::BuildUI()
 			std::string sHeaderName = "Entity " + std::to_string(i);
 			if (ImGui::CollapsingHeader(sHeaderName.c_str(), ImGuiTreeNodeFlags_None))
 			{
-				ImGui::Indent();;
+				ImGui::Indent();
 				ImGui::Text("Verticies %u", m_vEntities[i].GetMesh()->GetVertexCount());
 				ImGui::Text("Indicies %u", m_vEntities[i].GetMesh()->GetIndexCount());
 
@@ -698,6 +635,57 @@ void Game::BuildUI()
 					}
 				}
 				ImGui::Unindent();
+			}
+		}
+		ImGui::Unindent();
+	}
+
+	if (ImGui::CollapsingHeader("Lights", ImGuiTreeNodeFlags_None))
+	{
+		ImGui::Indent();
+		for (int i = 0; i < m_vLights.size(); i++)
+		{
+			//create unique header name
+			std::string sHeaderName = "Light " + std::to_string(i);
+			if (ImGui::CollapsingHeader(sHeaderName.c_str(), ImGuiTreeNodeFlags_None))
+			{
+				ImGui::Indent();
+
+				// turn the transform rotation into float[3] so it can be passed into ImGui
+				float f3LightDirection[3] = {
+					m_vLights[i].Direction.x,
+					m_vLights[i].Direction.y,
+					m_vLights[i].Direction.z };
+				//create unique ID for rotation editor
+				std::string sDirectionID = "Light Direction##" + std::to_string(i);
+				ImGui::DragFloat3(sDirectionID.c_str(), f3LightDirection, 0.1f);
+				// set the position equal to the edited ImGui position
+				m_vLights[i].Direction = XMFLOAT3(f3LightDirection);
+
+				// turn the transform position into float[3] so it can be passed into ImGui
+				float f3LightPosition[3] = {
+					m_vLights[i].Position.x,
+					m_vLights[i].Position.y,
+					m_vLights[i].Position.z };
+				//create unique ID for position editor
+				std::string sPositionID = "Light Position##" + std::to_string(i);
+				ImGui::DragFloat3(sPositionID.c_str(), f3LightPosition, 1.0f);
+				// set the position equal to the edited ImGui position
+				m_vLights[i].Position = XMFLOAT3(f3LightPosition);
+
+				// turn the tint color into float[4] so it can be passed into ImGui
+				float f4LightColor[4] = {
+					m_vLights[i].Color.x,
+					m_vLights[i].Color.y,
+					m_vLights[i].Color.z,
+					1.0 };
+
+				//create unique ID for tint editor
+				std::string sTintID = "Light Color##" + std::to_string(i);
+				ImGui::ColorEdit4(sTintID.c_str(), f4LightColor);
+
+				// set the tint equal to the edited ImGui tint
+				m_vLights[i].Color = XMFLOAT3(f4LightColor);
 			}
 		}
 		ImGui::Unindent();

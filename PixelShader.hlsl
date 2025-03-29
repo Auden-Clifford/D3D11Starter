@@ -44,7 +44,19 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 result = float3(0, 0, 0);
     for (int i = 0; i < 5; i++)
     {
-        result += CalculateDirectional(lights[i], input.normal, surfaceColor, roughness, cameraPos, view);
+        if (lights[i].Type == 0)
+        {
+            result += CalculateDirectionalLight(lights[i], input.normal, surfaceColor, roughness, cameraPos, view);
+        }
+        else if (lights[i].Type == 1)
+        {
+            result += CalculatePointLight(lights[i], input.normal, surfaceColor, roughness, cameraPos, view, input.worldPosition);
+        }
+        else
+        {
+            result += CalculateSpotLight(lights[i], input.normal, surfaceColor, roughness, cameraPos, view, input.worldPosition);
+        }
+    
     }
     
 	// return texture color multiplied by tint
