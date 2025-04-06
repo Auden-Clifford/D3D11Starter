@@ -55,7 +55,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 view = normalize(cameraPos - input.worldPosition);
     
     // ambient light calculations
-    float3 ambientTerm = ambient * surfaceColor;
+    float3 ambientTerm = ambient * surfaceColor.rgb;
     
     // calculate light from all lights
     float3 result = float3(0, 0, 0);
