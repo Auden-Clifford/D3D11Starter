@@ -1,6 +1,6 @@
 #include "ShaderStructs.hlsli"
 
-TextureCube SkyColor : register(t0);
+TextureCube SkyTexture : register(t0);
 SamplerState BasicSampler : register(s0);
 
 float4 main(VertexToPixel_Sky input) : SV_TARGET
