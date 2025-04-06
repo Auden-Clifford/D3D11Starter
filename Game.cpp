@@ -58,7 +58,7 @@ void Game::Initialize()
 	m_spActiveCamera = m_vCameras[0];
 
 	// set the ambient light
-	m_f3AmbientLight = XMFLOAT3(.025, .030, .040);
+	m_f3AmbientLight = XMFLOAT3(.31, .19, .32);
 
 	// set the other lights
 	Light DirectionalLight1 = {};
@@ -312,6 +312,15 @@ void Game::CreateGeometry()
 	std::shared_ptr<Mesh> spMeshQuadDouble = std::make_shared<Mesh>(FixPath("../../Assets/Models/quad_double_sided.obj").c_str());
 	std::shared_ptr<Mesh> spMeshQuad = std::make_shared<Mesh>(FixPath("../../Assets/Models/quad.obj").c_str());
 
+	// create skybox
+	m_spSkybox = std::make_shared<Sky>(spMeshCube, cpSamplerState,
+		FixPath(L"../../Assets/Skies/Clouds_Pink/right.png").c_str(),
+		FixPath(L"../../Assets/Skies/Clouds_Pink/left.png").c_str(),
+		FixPath(L"../../Assets/Skies/Clouds_Pink/up.png").c_str(),
+		FixPath(L"../../Assets/Skies/Clouds_Pink/down.png").c_str(),
+		FixPath(L"../../Assets/Skies/Clouds_Pink/front.png").c_str(),
+		FixPath(L"../../Assets/Skies/Clouds_Pink/back.png").c_str());
+
 	m_vEntities.push_back(Entity(spMeshCube, spMatMetal));
 	m_vEntities.push_back(Entity(spMeshHelix, spMatMetal));
 	m_vEntities[1].GetTransform()->SetPosition(3.0f, 0.0f, 0.0f);
@@ -442,6 +451,9 @@ void Game::Draw(float deltaTime, float totalTime)
 
 			m_vEntities[i].Draw(m_spActiveCamera, totalTime);
 		}
+
+		// draw the skybox
+		m_spSkybox->Draw(m_spActiveCamera);
 	}
 
 	ImGui::Render(); // Turns this frame’s UI into renderable triangles

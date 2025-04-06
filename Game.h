@@ -8,6 +8,7 @@
 #include <vector>
 #include "Camera.h"
 #include "Lights.h"
+#include "Sky.h"
 
 class Game
 {
@@ -56,6 +57,7 @@ private:
 	std::vector<std::shared_ptr<Camera>> m_vCameras;
 	std::shared_ptr<Camera> m_spActiveCamera;
 	std::vector<Light> m_vLights;
+	std::shared_ptr<Sky> m_spSkybox;
 #pragma endregion
 };
 

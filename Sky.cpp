@@ -1,6 +1,7 @@
 #include "Sky.h"
 #include "WICTextureLoader.h"
 #include "Graphics.h"
+#include "PathHelpers.h"
 
 using namespace DirectX;
 
@@ -35,6 +36,12 @@ Sky::Sky(
 	ddDepthStencilDescription.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
 	Graphics::Device->CreateDepthStencilState(&ddDepthStencilDescription, m_cpDepthStencilState.GetAddressOf());
+
+	// create vertex and pixel shaders
+	m_spVertexShader = std::make_shared<SimpleVertexShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"VertexShaderSky.cso").c_str());
+	m_spPixelShader = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"PixelShaderSky.cso").c_str());
 }
 
 // draws the skybox
