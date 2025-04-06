@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <DirectXMath.h>
 
+using namespace DirectX;
+
 /// <summary>
 /// Takes a set of verticies and indicies and creates a vertex and index buffer for this mesh
 /// </summary>
@@ -297,6 +299,9 @@ void Mesh::CreateVertexAndIndexBuffers(Vertex* a_pVerticies, unsigned int a_uVer
 	m_uVertices = a_uVerticiesLength;
 	m_uIndicies = a_uIndiciesLength;
 
+	// calculate the tangents for all vertices
+	CalculateTangents(a_pVerticies, a_uVerticiesLength, a_pIndicies, a_uIndiciesLength);
+
 	// Create a VERTEX BUFFER
 	D3D11_BUFFER_DESC vbd = {};
 	vbd.Usage = D3D11_USAGE_IMMUTABLE;	// Will NEVER change 
@@ -328,6 +333,95 @@ void Mesh::CreateVertexAndIndexBuffers(Vertex* a_pVerticies, unsigned int a_uVer
 
 	//create the index buffer
 	Graphics::Device->CreateBuffer(&ibd, &initialIndexData, m_cpIndexBuffer.GetAddressOf());
+}
+// --------------------------------------------------------
+// Author: Chris Cascioli
+// Purpose: Calculates the tangents of the vertices in a mesh
+// 
+// - You are allowed to directly copy/paste this into your code base
+//   for assignments, given that you clearly cite that this is not
+//   code of your own design.
+//
+// - Code originally adapted from: http://www.terathon.com/code/tangent.html
+//   - Updated version now found here: http://foundationsofgameenginedev.com/FGED2-sample.pdf
+//   - See listing 7.4 in section 7.5 (page 9 of the PDF)
+//
+// - Note: For this code to work, your Vertex format must
+//         contain an XMFLOAT3 called Tangent
+//
+// - Be sure to call this BEFORE creating your D3D vertex/index buffers
+// --------------------------------------------------------
+void Mesh::CalculateTangents(Vertex* a_pVertices, int a_nVerticiesLength, unsigned int* a_pIndices, int a_nIndiciesLength)
+{
+	// Reset tangents
+	for (int i = 0; i < a_nVerticiesLength; i++)
+	{
+		a_pVertices[i].Tangent = DirectX::XMFLOAT3(0, 0, 0);
+	}
+
+	// Calculate tangents one whole triangle at a time
+	for (int i = 0; i < a_nIndiciesLength;)
+	{
+		// Grab indices and vertices of first triangle
+		unsigned int i1 = a_pIndices[i++];
+		unsigned int i2 = a_pIndices[i++];
+		unsigned int i3 = a_pIndices[i++];
+		Vertex* v1 = &a_pVertices[i1];
+		Vertex* v2 = &a_pVertices[i2];
+		Vertex* v3 = &a_pVertices[i3];
+
+		// Calculate vectors relative to triangle positions
+		float x1 = v2->Position.x - v1->Position.x;
+		float y1 = v2->Position.y - v1->Position.y;
+		float z1 = v2->Position.z - v1->Position.z;
+
+		float x2 = v3->Position.x - v1->Position.x;
+		float y2 = v3->Position.y - v1->Position.y;
+		float z2 = v3->Position.z - v1->Position.z;
+
+		// Do the same for vectors relative to triangle uv's
+		float s1 = v2->UV.x - v1->UV.x;
+		float t1 = v2->UV.y - v1->UV.y;
+
+		float s2 = v3->UV.x - v1->UV.x;
+		float t2 = v3->UV.y - v1->UV.y;
+
+		// Create vectors for tangent calculation
+		float r = 1.0f / (s1 * t2 - s2 * t1);
+
+		float tx = (t2 * x1 - t1 * x2) * r;
+		float ty = (t2 * y1 - t1 * y2) * r;
+		float tz = (t2 * z1 - t1 * z2) * r;
+
+		// Adjust tangents of each vert of the triangle
+		v1->Tangent.x += tx;
+		v1->Tangent.y += ty;
+		v1->Tangent.z += tz;
+
+		v2->Tangent.x += tx;
+		v2->Tangent.y += ty;
+		v2->Tangent.z += tz;
+
+		v3->Tangent.x += tx;
+		v3->Tangent.y += ty;
+		v3->Tangent.z += tz;
+	}
+
+	// Ensure all of the tangents are orthogonal to the normals
+	for (int i = 0; i < a_nVerticiesLength; i++)
+	{
+		// Grab the two vectors
+		DirectX::XMVECTOR normal = DirectX::XMLoadFloat3(&a_pVertices[i].Normal);
+		DirectX::XMVECTOR tangent = DirectX::XMLoadFloat3(&a_pVertices[i].Tangent);
+
+		// Use Gram-Schmidt orthonormalize to ensure
+		// the normal and tangent are exactly 90 degrees apart
+		tangent = DirectX::XMVector3Normalize(
+			tangent - normal * DirectX::XMVector3Dot(normal, tangent));
+
+		// Store the tangent
+		DirectX::XMStoreFloat3(&a_pVertices[i].Tangent, tangent);
+	}
 }
 
 #pragma region Getters

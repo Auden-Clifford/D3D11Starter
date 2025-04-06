@@ -17,6 +17,7 @@ public:
 
 	// primary functions
 	void CreateVertexAndIndexBuffers(Vertex* a_pVerticies, unsigned int a_uVerticiesLength, unsigned int* a_pIndicies, unsigned int a_uIndiciesLength);
+	void CalculateTangents(Vertex* a_pVertices, int a_nVerticiesLength, unsigned int* a_pIndices, int a_nIndiciesLength);
 
 	// getters
 	Microsoft::WRL::ComPtr<ID3D11Buffer> GetVertexBuffer();
