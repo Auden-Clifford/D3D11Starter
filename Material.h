@@ -28,6 +28,7 @@ public:
 	void SetUVScale(float a_fU, float a_fV);
 	void SetUVOffset(DirectX::XMFLOAT2 a_f2UVOffset);
 	void SetUVOffset(float a_fU, float a_fV);
+	void SetRoughness(float a_fRoughness);
 
 	void AddTextureSRV(std::string a_sShaderResourceName, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> a_cpTextureSRV);
 	void AddSampler(std::string a_sShaderResourceName, Microsoft::WRL::ComPtr<ID3D11SamplerState> a_cpSampler);

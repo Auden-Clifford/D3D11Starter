@@ -225,34 +225,41 @@ void Game::CreateGeometry()
 		Graphics::Device, Graphics::Context, FixPath(L"VertexShader.cso").c_str());
 	std::shared_ptr<SimplePixelShader> spPixelShaderSolid = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"PixelShader.cso").c_str());
-	std::shared_ptr<SimplePixelShader> spPixelShaderMultiTexture = std::make_shared<SimplePixelShader>(
+	/*std::shared_ptr<SimplePixelShader> spPixelShaderMultiTexture = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"PixelShaderMultiTexture.cso").c_str());
 	std::shared_ptr<SimplePixelShader> spPixelShaderUV = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"DebugUVsPS.cso").c_str());
 	std::shared_ptr<SimplePixelShader> spPixelShaderNormals = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"DebugNormalsPS.cso").c_str());
 	std::shared_ptr<SimplePixelShader> spPixelShaderCustom = std::make_shared<SimplePixelShader>(
-		Graphics::Device, Graphics::Context, FixPath(L"CustomPS.cso").c_str());
+		Graphics::Device, Graphics::Context, FixPath(L"CustomPS.cso").c_str());*/
 
 	// Create some temporary variables to represent colors
 	// - Not necessary, just makes things more readable
-	XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	/*XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 	XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
 	XMFLOAT4 black = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	XMFLOAT4 white = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	XMFLOAT4 grey = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.5f);
+	XMFLOAT4 grey = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.5f);*/
+	XMFLOAT4 white = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// load textures
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetal;
 	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_rusty_grid/rusty_metal_grid_diff_4k.jpg").c_str(), nullptr, srvMetal.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetalNormal;
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_rusty_grid/rusty_metal_grid_nor_gl_4k.jpg").c_str(), nullptr, srvMetalNormal.GetAddressOf());
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvBrick; 
 	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/stone_brick_wall/stone_brick_wall_001_diff_4k.jpg").c_str(), nullptr, srvBrick.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvBrickNormal;
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/stone_brick_wall/stone_brick_wall_001_nor_gl_4k.jpg").c_str(), nullptr, srvBrickNormal.GetAddressOf());
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvWood; 
 	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/rough_wood/rough_wood_diff_4k.jpg").c_str(), nullptr, srvWood.GetAddressOf());
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvCrack;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvWoodNormal;
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/rough_wood/rough_wood_nor_gl_4k.jpg").c_str(), nullptr, srvWoodNormal.GetAddressOf());
+	/*Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvCrack;
 	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/crack_decal.jpg").c_str(), nullptr, srvCrack.GetAddressOf());
-	
+	*/
 	Microsoft::WRL::ComPtr <ID3D11SamplerState> cpSamplerState;
 	D3D11_SAMPLER_DESC samplerDesc = {};
 
@@ -274,18 +281,21 @@ void Game::CreateGeometry()
 	std::shared_ptr<Material> spMatMetal = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.5);
 	//Material mMetal = Material(white, spVertexShader, spPixelShaderSolid);
 	spMatMetal->AddTextureSRV("SurfaceTexture", srvMetal);
+	spMatMetal->AddTextureSRV("NormalMap", srvMetalNormal);
 	spMatMetal->AddSampler("BasicSampler", cpSamplerState);
 	spMatMetal->SetUVScale(5.0f, 5.0f);
 	spMatMetal->SetUVOffset(0.75f, 0.0f);
 
-	std::shared_ptr<Material> spMatBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.7);
+	std::shared_ptr<Material> spMatBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 1);
 	//Material mBrick = Material(white, spVertexShader, spPixelShaderSolid);
 	spMatBrick->AddTextureSRV("SurfaceTexture", srvBrick);
+	spMatBrick->AddTextureSRV("NormalMap", srvBrickNormal);
 	spMatBrick->AddSampler("BasicSampler", cpSamplerState);
 	
-	std::shared_ptr<Material> spMatWood = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.95);
+	std::shared_ptr<Material> spMatWood = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.1);
 	//Material mWood = Material(white, spVertexShader, spPixelShaderSolid);
 	spMatWood->AddTextureSRV("SurfaceTexture", srvWood);
+	spMatWood->AddTextureSRV("NormalMap", srvWoodNormal);
 	spMatWood->AddSampler("BasicSampler", cpSamplerState);
 
 	//std::shared_ptr<Material> spMatCrackedBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderMultiTexture, 0.4);
@@ -622,6 +632,15 @@ void Game::BuildUI()
 
 				// set the UV Scale equal to the edited ImGui UV Scale
 				m_vEntities[i].GetMaterial()->SetUVOffset(XMFLOAT2(f2EntityUVOffset));
+
+				float fRoughness = m_vEntities[i].GetMaterial()->GetRoughness();
+
+				//create unique ID for roughness
+				std::string sRoughnessID = "Entity Roughness Offset##" + std::to_string(i);
+				ImGui::DragFloat(sRoughnessID.c_str(), &fRoughness, 0.01f);
+
+				// set the UV Scale equal to the edited ImGui UV Scale
+				m_vEntities[i].GetMaterial()->SetRoughness(fRoughness);
 
 				ImGui::Indent();
 				//create unique header name

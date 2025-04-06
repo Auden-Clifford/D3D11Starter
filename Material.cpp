@@ -180,4 +180,8 @@ void Material::SetUVOffset(float a_fU, float a_fV)
 {
 	m_f2UVOffset = DirectX::XMFLOAT2(a_fU, a_fV);
 }
+void Material::SetRoughness(float a_fRoughness)
+{
+	m_fRoughness = a_fRoughness;
+}
 #pragma endregion

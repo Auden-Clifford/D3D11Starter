@@ -2,8 +2,9 @@
 #include "LightingEquations.hlsli"
 
 // texture and sampler
-Texture2D SurfaceTexture : register(t0); 
-SamplerState BasicSampler : register(s0);
+Texture2D SurfaceTexture    : register(t0); 
+Texture2D NormalMap         : register(t1);
+SamplerState BasicSampler   : register(s0);
 
 //constant buffer input
 cbuffer ExternalData : register(b0)
@@ -30,6 +31,22 @@ float4 main(VertexToPixel input) : SV_TARGET
 {
     // re-normalize the normals
     input.normal = normalize(input.normal);
+    input.tangent = normalize(input.tangent);
+    
+    // unpack the normal from the normal map
+    float3 unpackedNormal = NormalMap.Sample(BasicSampler, input.uv * uvScale + uvOffset).rgb * 2 - 1;
+    unpackedNormal = normalize(unpackedNormal); // Don’t forget to normalize!
+    
+    // Feel free to adjust/simplify this code to fit with your existing shader(s)
+    // Simplifications include not re-normalizing the same vector more than once!
+    float3 N = input.normal; 
+    float3 T = input.tangent;
+    T = normalize(T - N * dot(T, N)); // Gram-Schmidt assumes T&N are normalized!
+    float3 B = cross(T, N);
+    float3x3 TBN = float3x3(T, B, N);
+    
+    // transform the normal by the the value from the normal map
+    input.normal = mul(unpackedNormal, TBN);
     
 	// sample the texture 
     float4 surfaceColor = SurfaceTexture.Sample(BasicSampler, input.uv * uvScale + uvOffset); 

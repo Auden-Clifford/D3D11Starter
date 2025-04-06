@@ -43,6 +43,7 @@ VertexToPixel main( VertexShaderInput input )
 	// pass the UV and normal data down the pipeline
     output.uv = input.uv;
     output.normal = mul((float3x3) worldInvTranspose, input.normal); // account for transformation
+    output.tangent = mul((float3x3) world, input.tangent); // same for tangent, but with the world matrix
 	
 	// get the world position
     output.worldPosition = mul(world, float4(input.localPosition, 1)).xyz;
