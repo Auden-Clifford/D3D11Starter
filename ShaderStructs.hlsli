@@ -19,6 +19,12 @@ struct VertexToPixel
     float3 worldPosition    : POSITION;
 };
 
+struct VertexToPixel_Sky
+{
+    float4 screenPosition         : SV_Position;
+    float3 sampleDir        : DIRECTION;
+};
+
 // Struct representing a single vertex worth of data used by the vertex shader
 struct VertexShaderInput
 {
