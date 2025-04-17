@@ -2,9 +2,11 @@
 #include "LightingEquations.hlsli"
 
 // texture and sampler
-Texture2D SurfaceTexture    : register(t0); 
-Texture2D NormalMap         : register(t1);
-SamplerState BasicSampler   : register(s0);
+Texture2D Albedo : register(t0);
+Texture2D NormalMap : register(t1);
+Texture2D RoughnessMap : register(t2);
+Texture2D MetalnessMap : register(t3);
+SamplerState BasicSampler : register(s0);
 
 //constant buffer input
 cbuffer ExternalData : register(b0)
@@ -35,6 +37,11 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     float2 uvPosition = input.uv * uvScale + uvOffset;
     
+    // sample the textures 
+    float3 albedoColor = pow(Albedo.Sample(BasicSampler, uvPosition), 2.2f);
+    float roughness = RoughnessMap.Sample(BasicSampler, input.uv).r;
+    float metalness = MetalnessMap.Sample(BasicSampler, input.uv).r;
+    
     // unpack the normal from the normal map
     float3 unpackedNormal = NormalMap.Sample(BasicSampler, uvPosition).rgb * 2 - 1;
     unpackedNormal = normalize(unpackedNormal); // Don’t forget to normalize!
@@ -50,14 +57,17 @@ float4 main(VertexToPixel input) : SV_TARGET
     // transform the normal by the the value from the normal map
     input.normal = mul(unpackedNormal, TBN);
     
-	// sample the texture 
-    float3 surfaceColor = pow(SurfaceTexture.Sample(BasicSampler, uvPosition), 2.2f);
+    // Specular color determination -----------------
+    // Assume albedo texture is actually holding specular color where metalness == 1
+    // Note the use of lerp here - metal is generally 0 or 1, but might be in between
+    // because of linear texture sampling, so we lerp the specular color to match
+    float3 specularColor = lerp(F0_NON_METAL, albedoColor.rgb, metalness);
     
     // calculate the camera view vector
     float3 view = normalize(cameraPos - input.worldPosition);
     
     // ambient light calculations
-    float3 ambientTerm = ambient * surfaceColor;
+    //float3 ambientTerm = ambient * albedoColor;
     
     // calculate light from all lights
     float3 result = float3(0, 0, 0);
@@ -65,19 +75,19 @@ float4 main(VertexToPixel input) : SV_TARGET
     {
         if (lights[i].Type == 0)
         {
-            result += CalculateDirectionalLight(lights[i], input.normal, surfaceColor, roughness, cameraPos, view);
+            result += CalculateDirectionalLight(lights[i], input.normal, view, albedoColor, specularColor, roughness, metalness);
         }
         else if (lights[i].Type == 1)
         {
-            result += CalculatePointLight(lights[i], input.normal, surfaceColor, roughness, cameraPos, view, input.worldPosition);
+            result += CalculatePointLight(lights[i], input.normal, view, albedoColor, specularColor, roughness, metalness, input.worldPosition);
         }
         else
         {
-            result += CalculateSpotLight(lights[i], input.normal, surfaceColor, roughness, cameraPos, view, input.worldPosition);
+            result += CalculateSpotLight(lights[i], input.normal, view, albedoColor, specularColor, roughness, metalness, input.worldPosition);
         }
     
     }
     
 	// return texture color multiplied by tint
-    return float4(pow(result + ambientTerm, 1.0f / 2.2f), 1);
+    return float4(pow(result, 1.0f / 2.2f), 1);
 }

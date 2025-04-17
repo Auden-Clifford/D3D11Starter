@@ -246,20 +246,33 @@ void Game::CreateGeometry()
 
 	// load textures
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetal;
-	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_rusty_grid/rusty_metal_grid_diff_4k.jpg").c_str(), nullptr, srvMetal.GetAddressOf());
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_plate/metal_plate_02_diff_4k.jpg").c_str(), nullptr, srvMetal.GetAddressOf());
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetalNormal;
-	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_rusty_grid/rusty_metal_grid_nor_gl_4k.jpg").c_str(), nullptr, srvMetalNormal.GetAddressOf());
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_plate/metal_plate_02_nor_gl_4k.jpg").c_str(), nullptr, srvMetalNormal.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetalRough;
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_plate/metal_plate_02_rough_4k.jpg").c_str(), nullptr, srvMetalRough.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetalMetalness;
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_plate/metal_plate_02_metal_4k.jpg").c_str(), nullptr, srvMetalMetalness.GetAddressOf());
+	
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvBrick; 
 	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/stone_brick_wall/stone_brick_wall_001_diff_4k.jpg").c_str(), nullptr, srvBrick.GetAddressOf());
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvBrickNormal;
 	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/stone_brick_wall/stone_brick_wall_001_nor_gl_4k.jpg").c_str(), nullptr, srvBrickNormal.GetAddressOf());
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvWood; 
-	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/rough_wood/rough_wood_diff_4k.jpg").c_str(), nullptr, srvWood.GetAddressOf());
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvWoodNormal;
-	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/rough_wood/rough_wood_nor_gl_4k.jpg").c_str(), nullptr, srvWoodNormal.GetAddressOf());
-	/*Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvCrack;
-	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/crack_decal.jpg").c_str(), nullptr, srvCrack.GetAddressOf());
-	*/
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvBrickRough;
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/stone_brick_wall/stone_brick_wall_001_rough_4k.jpg").c_str(), nullptr, srvBrickRough.GetAddressOf());
+	
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetalSafety;
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_plate_safety/metal_plate_diff_4k.jpg").c_str(), nullptr, srvMetalSafety.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetalSafetyNormal;														
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_plate_safety/metal_plate_nor_gl_4k.jpg").c_str(), nullptr, srvMetalSafetyNormal.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetalSafetyRough;														 
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_plate_safety/metal_plate_rough_4k.jpg").c_str(), nullptr, srvMetalSafetyRough.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvMetalSafetyMetalness;													 
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/metal_plate_safety/metal_plate_metal_4k.jpg").c_str(), nullptr, srvMetalSafetyMetalness.GetAddressOf());
+	
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvNoMetalness;
+	DirectX::CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/default_metalness.png").c_str(), nullptr, srvNoMetalness.GetAddressOf());
+	
 	Microsoft::WRL::ComPtr <ID3D11SamplerState> cpSamplerState;
 	D3D11_SAMPLER_DESC samplerDesc = {};
 
@@ -279,24 +292,33 @@ void Game::CreateGeometry()
 	//Material mMatCustom = Material(blue, spVertexShader, spPixelShaderCustom);
 
 	std::shared_ptr<Material> spMatMetal = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.5);
-	//Material mMetal = Material(white, spVertexShader, spPixelShaderSolid);
-	spMatMetal->AddTextureSRV("SurfaceTexture", srvMetal);
+	spMatMetal->AddTextureSRV("Albedo", srvMetal);
 	spMatMetal->AddTextureSRV("NormalMap", srvMetalNormal);
+	spMatMetal->AddTextureSRV("RoughnessMap", srvMetalRough);
+	spMatMetal->AddTextureSRV("MetalnessMap", srvMetalNormal);
 	spMatMetal->AddSampler("BasicSampler", cpSamplerState);
-	spMatMetal->SetUVScale(5.0f, 5.0f);
-	spMatMetal->SetUVOffset(0.75f, 0.0f);
+	//spMatMetal->SetUVScale(5.0f, 5.0f);
+	//spMatMetal->SetUVOffset(0.75f, 0.0f);
 
 	std::shared_ptr<Material> spMatBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 1);
-	//Material mBrick = Material(white, spVertexShader, spPixelShaderSolid);
-	spMatBrick->AddTextureSRV("SurfaceTexture", srvBrick);
+	spMatBrick->AddTextureSRV("Albedo", srvBrick);
 	spMatBrick->AddTextureSRV("NormalMap", srvBrickNormal);
+	spMatBrick->AddTextureSRV("RoughnessMap", srvBrickRough);
+	spMatBrick->AddTextureSRV("MetalnessMap", srvNoMetalness);
 	spMatBrick->AddSampler("BasicSampler", cpSamplerState);
-	
-	std::shared_ptr<Material> spMatWood = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.1);
-	//Material mWood = Material(white, spVertexShader, spPixelShaderSolid);
-	spMatWood->AddTextureSRV("SurfaceTexture", srvWood);
-	spMatWood->AddTextureSRV("NormalMap", srvWoodNormal);
-	spMatWood->AddSampler("BasicSampler", cpSamplerState);
+
+	std::shared_ptr<Material> spMatMetalSafety = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.5);
+	spMatMetalSafety->AddTextureSRV("Albedo", srvMetalSafety);
+	spMatMetalSafety->AddTextureSRV("NormalMap", srvMetalSafetyNormal);
+	spMatMetalSafety->AddTextureSRV("RoughnessMap", srvMetalSafetyRough);
+	spMatMetalSafety->AddTextureSRV("MetalnessMap", srvMetalSafetyMetalness);
+	spMatMetalSafety->AddSampler("BasicSampler", cpSamplerState);
+	//
+	//std::shared_ptr<Material> spMatWood = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.1);
+	////Material mWood = Material(white, spVertexShader, spPixelShaderSolid);
+	//spMatWood->AddTextureSRV("Albedo", srvWood);
+	//spMatWood->AddTextureSRV("NormalMap", srvWoodNormal);
+	//spMatWood->AddSampler("BasicSampler", cpSamplerState);
 
 	//std::shared_ptr<Material> spMatCrackedBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderMultiTexture, 0.4);
 	////Material mCrackedBrick = Material(white, spVertexShader, spPixelShaderMultiTexture);
@@ -349,20 +371,20 @@ void Game::CreateGeometry()
 	m_vEntities[12].GetTransform()->SetPosition(15.0f, -3.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshQuad, spMatBrick));
 	m_vEntities[13].GetTransform()->SetPosition(18.0f, -3.0f, 0.0f);
-
-	m_vEntities.push_back(Entity(spMeshCube, spMatWood));
+	//
+	m_vEntities.push_back(Entity(spMeshCube, spMatMetalSafety));
 	m_vEntities[14].GetTransform()->SetPosition(0.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshHelix, spMatWood));
+	m_vEntities.push_back(Entity(spMeshHelix, spMatMetalSafety));
 	m_vEntities[15].GetTransform()->SetPosition(3.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshSphere, spMatWood));
+	m_vEntities.push_back(Entity(spMeshSphere, spMatMetalSafety));
 	m_vEntities[16].GetTransform()->SetPosition(6.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshCylinder, spMatWood));
+	m_vEntities.push_back(Entity(spMeshCylinder, spMatMetalSafety));
 	m_vEntities[17].GetTransform()->SetPosition(9.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshTorus, spMatWood));
+	m_vEntities.push_back(Entity(spMeshTorus, spMatMetalSafety));
 	m_vEntities[18].GetTransform()->SetPosition(12.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshQuadDouble, spMatWood));
+	m_vEntities.push_back(Entity(spMeshQuadDouble, spMatMetalSafety));
 	m_vEntities[19].GetTransform()->SetPosition(15.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshQuad, spMatWood));
+	m_vEntities.push_back(Entity(spMeshQuad, spMatMetalSafety));
 	m_vEntities[20].GetTransform()->SetPosition(18.0f, -6.0f, 0.0f);
 
 }
