@@ -58,19 +58,19 @@ void Game::Initialize()
 	m_spActiveCamera = m_vCameras[0];
 
 	// set the ambient light
-	m_f3AmbientLight = XMFLOAT3(.31, .19, .32);
+	m_f3AmbientLight = XMFLOAT3(0.31f, 0.19f, 0.32f);
 
 	// set the other lights
 	Light DirectionalLight1 = {};
 	DirectionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
 	DirectionalLight1.Direction = DirectX::XMFLOAT3(1, -1, 0);
-	DirectionalLight1.Color = DirectX::XMFLOAT3(0.2, 0.2, 1);
+	DirectionalLight1.Color = DirectX::XMFLOAT3(0.2f, 0.2f, 1);
 	DirectionalLight1.Intensity = 1.0;
 	m_vLights.push_back(DirectionalLight1);
 	Light DirectionalLight2 = {};
 	DirectionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
 	DirectionalLight2.Direction = DirectX::XMFLOAT3(1, 1, 0.5);
-	DirectionalLight2.Color = DirectX::XMFLOAT3(1, 0.2, 0.2);
+	DirectionalLight2.Color = DirectX::XMFLOAT3(1, 0.2f, 0.2f);
 	DirectionalLight2.Intensity = 1.0;
 	m_vLights.push_back(DirectionalLight2);
 	
@@ -89,7 +89,7 @@ void Game::Initialize()
 	//DirectionalLight5.Direction = DirectX::XMFLOAT3(0, 1, -1);
 	PointLight2.Position = DirectX::XMFLOAT3(25, -15, 3);
 	PointLight2.Range = 60;
-	PointLight2.Color = DirectX::XMFLOAT3(0.5, 0.2, 1);
+	PointLight2.Color = DirectX::XMFLOAT3(0.5f, 0.2f, 1);
 	PointLight2.Intensity = 0.5;
 	m_vLights.push_back(PointLight2);
 
@@ -98,10 +98,10 @@ void Game::Initialize()
 	SpotLight1.Position = DirectX::XMFLOAT3(15, 2, 0);
 	SpotLight1.Range = 60;
 	SpotLight1.Direction = DirectX::XMFLOAT3(0, -1, 0);
-	SpotLight1.Color = DirectX::XMFLOAT3(0.2, 1, 0.2);
-	SpotLight1.Intensity = 2.0;
-	SpotLight1.SpotInnerAngle = 0.2;
-	SpotLight1.SpotOuterAngle = 0.5;
+	SpotLight1.Color = DirectX::XMFLOAT3(0.2f, 1, 0.2f);
+	SpotLight1.Intensity = 2.0f;
+	SpotLight1.SpotInnerAngle = 0.2f;
+	SpotLight1.SpotOuterAngle = 0.5f;
 	m_vLights.push_back(SpotLight1);
 
 	// Set initial graphics API state
@@ -565,92 +565,59 @@ void Game::BuildUI()
 				ImGui::Text("Verticies %u", m_vEntities[i].GetMesh()->GetVertexCount());
 				ImGui::Text("Indicies %u", m_vEntities[i].GetMesh()->GetIndexCount());
 
-				// turn the transform position into float[3] so it can be passed into ImGui
-				float f3EntityPosition[3] = {
-					m_vEntities[i].GetTransform()->GetPosition().x,
-					m_vEntities[i].GetTransform()->GetPosition().y,
-					m_vEntities[i].GetTransform()->GetPosition().z };
-
+				// create a local variable that can be passed into ImGui
+				XMFLOAT3 f3EntityPosition = m_vEntities[i].GetTransform()->GetPosition();
 				//create unique ID for position editor
 				std::string sPositionID = "Entity Position##" + std::to_string(i);
-				ImGui::DragFloat3(sPositionID.c_str(), f3EntityPosition, 0.01f, -1.0f, 1.0f);
-
+				ImGui::DragFloat3(sPositionID.c_str(), &f3EntityPosition.x, 0.1f);
 				// set the position equal to the edited ImGui position
-				m_vEntities[i].GetTransform()->SetPosition(XMFLOAT3(f3EntityPosition));
+				m_vEntities[i].GetTransform()->SetPosition(f3EntityPosition);
 
-				// turn the transform rotation into float[3] so it can be passed into ImGui
-				float f3EntityRotation[3] = {
-					m_vEntities[i].GetTransform()->GetPitchYawRoll().x,
-					m_vEntities[i].GetTransform()->GetPitchYawRoll().y,
-					m_vEntities[i].GetTransform()->GetPitchYawRoll().z };
-
+				// create a local variable that can be passed into ImGui
+				XMFLOAT3 f3EntityRotation = m_vEntities[i].GetTransform()->GetPitchYawRoll();
 				//create unique ID for rotation editor
 				std::string sRotationID = "Entity Rotation##" + std::to_string(i);
-				ImGui::DragFloat3(sRotationID.c_str(), f3EntityRotation, 0.1f);
+				ImGui::DragFloat3(sRotationID.c_str(), &f3EntityRotation.x, 0.1f);
+				// set the rotation equal to the edited ImGui position
+				m_vEntities[i].GetTransform()->SetRotation(f3EntityRotation);
 
-				// set the position equal to the edited ImGui position
-				m_vEntities[i].GetTransform()->SetRotation(XMFLOAT3(f3EntityRotation));
-
-				// turn the transform scale into float[3] so it can be passed into ImGui
-				float f3EntityScale[3] = {
-					m_vEntities[i].GetTransform()->GetScale().x,
-					m_vEntities[i].GetTransform()->GetScale().y,
-					m_vEntities[i].GetTransform()->GetScale().z };
-
+				// create a local variable that can be passed into ImGui
+				XMFLOAT3 f3EntityScale = m_vEntities[i].GetTransform()->GetScale();
 				//create unique ID for scale editor
 				std::string sScaleID = "Entity Scale##" + std::to_string(i);
-				ImGui::DragFloat3(sScaleID.c_str(), f3EntityScale, 0.1f);
-
-				// set the position equal to the edited ImGui position
-				m_vEntities[i].GetTransform()->SetScale(XMFLOAT3(f3EntityScale));
+				ImGui::DragFloat3(sScaleID.c_str(), &f3EntityScale.x, 0.1f);
+				// set the scale equal to the edited ImGui position
+				m_vEntities[i].GetTransform()->SetScale(f3EntityScale);
 				ImGui::Unindent();
 
-				// turn the tint color into float[4] so it can be passed into ImGui
-				float f4EntityTint[4] = {
-					m_vEntities[i].GetMaterial()->GetColorTint().x,
-					m_vEntities[i].GetMaterial()->GetColorTint().y,
-					m_vEntities[i].GetMaterial()->GetColorTint().z,
-					m_vEntities[i].GetMaterial()->GetColorTint().w };
-
+				// create a local variable that can be passed into ImGui
+				XMFLOAT4 f4EntityTint = m_vEntities[i].GetMaterial()->GetColorTint();
 				//create unique ID for tint editor
 				std::string sTintID = "Entity Tint##" + std::to_string(i);
-				ImGui::ColorEdit4(sTintID.c_str(), f4EntityTint);
-
+				ImGui::ColorEdit4(sTintID.c_str(), &f4EntityTint.x);
 				// set the tint equal to the edited ImGui tint
-				m_vEntities[i].GetMaterial()->SetColorTint(XMFLOAT4(f4EntityTint));
+				m_vEntities[i].GetMaterial()->SetColorTint(f4EntityTint);
 
-				// turn the UV Scale into float[2] so it can be passed into ImGui
-				float f2EntityUVScale[2] = {
-					m_vEntities[i].GetMaterial()->GetUVScale().x,
-					m_vEntities[i].GetMaterial()->GetUVScale().y
-				};
-
+				// create a local variable that can be passed into ImGui
+				XMFLOAT2 f2EntityUVScale = m_vEntities[i].GetMaterial()->GetUVScale();
 				//create unique ID for UV Scale editor
 				std::string sUVScaleID = "Entity UV Scale##" + std::to_string(i);
-				ImGui::DragFloat2(sUVScaleID.c_str(), f2EntityUVScale, 0.01f);
-
+				ImGui::DragFloat2(sUVScaleID.c_str(), &f2EntityUVScale.x, 0.01f);
 				// set the UV Scale equal to the edited ImGui UV Scale
-				m_vEntities[i].GetMaterial()->SetUVScale(XMFLOAT2(f2EntityUVScale));
+				m_vEntities[i].GetMaterial()->SetUVScale(f2EntityUVScale);
 
-				// turn the UV Offset into float[2] so it can be passed into ImGui
-				float f2EntityUVOffset[2] = {
-					m_vEntities[i].GetMaterial()->GetUVOffset().x,
-					m_vEntities[i].GetMaterial()->GetUVOffset().y
-				};
-
+				// create a local variable that can be passed into ImGui
+				XMFLOAT2 f2EntityUVOffset = m_vEntities[i].GetMaterial()->GetUVOffset();
 				//create unique ID for UV Scale editor
 				std::string sUVOffsetID = "Entity UV Offset##" + std::to_string(i);
-				ImGui::DragFloat2(sUVOffsetID.c_str(), f2EntityUVOffset, 0.01f);
-
+				ImGui::DragFloat2(sUVOffsetID.c_str(), &f2EntityUVOffset.x, 0.01f);
 				// set the UV Scale equal to the edited ImGui UV Scale
 				m_vEntities[i].GetMaterial()->SetUVOffset(XMFLOAT2(f2EntityUVOffset));
 
 				float fRoughness = m_vEntities[i].GetMaterial()->GetRoughness();
-
 				//create unique ID for roughness
 				std::string sRoughnessID = "Entity Roughness Offset##" + std::to_string(i);
 				ImGui::DragFloat(sRoughnessID.c_str(), &fRoughness, 0.01f);
-
 				// set the UV Scale equal to the edited ImGui UV Scale
 				m_vEntities[i].GetMaterial()->SetRoughness(fRoughness);
 
@@ -682,41 +649,17 @@ void Game::BuildUI()
 			{
 				ImGui::Indent();
 
-				// turn the transform rotation into float[3] so it can be passed into ImGui
-				float f3LightDirection[3] = {
-					m_vLights[i].Direction.x,
-					m_vLights[i].Direction.y,
-					m_vLights[i].Direction.z };
 				//create unique ID for rotation editor
 				std::string sDirectionID = "Light Direction##" + std::to_string(i);
-				ImGui::DragFloat3(sDirectionID.c_str(), f3LightDirection, 0.1f);
-				// set the position equal to the edited ImGui position
-				m_vLights[i].Direction = XMFLOAT3(f3LightDirection);
+				ImGui::DragFloat3(sDirectionID.c_str(), &m_vLights[i].Direction.x, 0.1f);
 
-				// turn the transform position into float[3] so it can be passed into ImGui
-				float f3LightPosition[3] = {
-					m_vLights[i].Position.x,
-					m_vLights[i].Position.y,
-					m_vLights[i].Position.z };
 				//create unique ID for position editor
 				std::string sPositionID = "Light Position##" + std::to_string(i);
-				ImGui::DragFloat3(sPositionID.c_str(), f3LightPosition, 1.0f);
-				// set the position equal to the edited ImGui position
-				m_vLights[i].Position = XMFLOAT3(f3LightPosition);
-
-				// turn the tint color into float[4] so it can be passed into ImGui
-				float f4LightColor[4] = {
-					m_vLights[i].Color.x,
-					m_vLights[i].Color.y,
-					m_vLights[i].Color.z,
-					1.0 };
+				ImGui::DragFloat3(sPositionID.c_str(), &m_vLights[i].Position.x, 1.0f);
 
 				//create unique ID for tint editor
 				std::string sTintID = "Light Color##" + std::to_string(i);
-				ImGui::ColorEdit4(sTintID.c_str(), f4LightColor);
-
-				// set the tint equal to the edited ImGui tint
-				m_vLights[i].Color = XMFLOAT3(f4LightColor);
+				ImGui::ColorEdit4(sTintID.c_str(), &m_vLights[i].Color.x);
 			}
 		}
 		ImGui::Unindent();

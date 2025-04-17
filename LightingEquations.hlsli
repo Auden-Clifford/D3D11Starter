@@ -12,11 +12,11 @@ float Attenuate(Light light, float3 worldPos)
 }
 
 // calculates a light's diffuse term
-float3 Diffuse(Light light, float3 normal, float3 lightDirection, float4 surfaceColor)
+float3 Diffuse(Light light, float3 normal, float3 lightDirection, float3 surfaceColor)
 {
     float3 diffuseTerm =
-        float4(saturate(dot(normal, -lightDirection)) * // Diffuse intensity, clamped to 0-1
-        light.Color * light.Intensity, 1) * // Light’s overall color
+        saturate(dot(normal, -lightDirection)) * // Diffuse intensity, clamped to 0-1
+        light.Color * light.Intensity * // Light’s overall color
         surfaceColor;
     
     return diffuseTerm;
@@ -39,7 +39,7 @@ float3 Specular(Light light, float roughness, float3 lightDirection, float3 norm
 }
 
 // calculates the lighting from a directional light
-float3 CalculateDirectionalLight(Light light, float3 normal, float4 surfaceColor, float roughness, float3 cameraPos, float3 view)
+float3 CalculateDirectionalLight(Light light, float3 normal, float3 surfaceColor, float roughness, float3 cameraPos, float3 view)
 {
     float3 lightDirection = normalize(light.Direction);
     
@@ -53,7 +53,7 @@ float3 CalculateDirectionalLight(Light light, float3 normal, float4 surfaceColor
 }
 
 // calculates the lighting from a point light
-float3 CalculatePointLight(Light light, float3 normal, float4 surfaceColor, float roughness, float3 cameraPos, float3 view, float3 worldPos)
+float3 CalculatePointLight(Light light, float3 normal, float3 surfaceColor, float roughness, float3 cameraPos, float3 view, float3 worldPos)
 {
     float3 lightDirection = normalize(worldPos - light.Position);
     
@@ -66,7 +66,7 @@ float3 CalculatePointLight(Light light, float3 normal, float4 surfaceColor, floa
     return (diffuseTerm + specularTerm) * Attenuate(light, worldPos);
 }
 
-float3 CalculateSpotLight(Light light, float3 normal, float4 surfaceColor, float roughness, float3 cameraPos, float3 view, float3 worldPos)
+float3 CalculateSpotLight(Light light, float3 normal, float3 surfaceColor, float roughness, float3 cameraPos, float3 view, float3 worldPos)
 {
     float3 directionToPixel = normalize(worldPos - light.Position);
     

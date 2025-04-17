@@ -33,8 +33,10 @@ float4 main(VertexToPixel input) : SV_TARGET
     input.normal = normalize(input.normal);
     input.tangent = normalize(input.tangent);
     
+    float2 uvPosition = input.uv * uvScale + uvOffset;
+    
     // unpack the normal from the normal map
-    float3 unpackedNormal = NormalMap.Sample(BasicSampler, input.uv * uvScale + uvOffset).rgb * 2 - 1;
+    float3 unpackedNormal = NormalMap.Sample(BasicSampler, uvPosition).rgb * 2 - 1;
     unpackedNormal = normalize(unpackedNormal); // Don’t forget to normalize!
     
     // Feel free to adjust/simplify this code to fit with your existing shader(s)
@@ -49,13 +51,13 @@ float4 main(VertexToPixel input) : SV_TARGET
     input.normal = mul(unpackedNormal, TBN);
     
 	// sample the texture 
-    float4 surfaceColor = SurfaceTexture.Sample(BasicSampler, input.uv * uvScale + uvOffset); 
+    float3 surfaceColor = pow(SurfaceTexture.Sample(BasicSampler, uvPosition), 2.2f);
     
     // calculate the camera view vector
     float3 view = normalize(cameraPos - input.worldPosition);
     
     // ambient light calculations
-    float3 ambientTerm = ambient * surfaceColor.rgb;
+    float3 ambientTerm = ambient * surfaceColor;
     
     // calculate light from all lights
     float3 result = float3(0, 0, 0);
@@ -77,5 +79,5 @@ float4 main(VertexToPixel input) : SV_TARGET
     }
     
 	// return texture color multiplied by tint
-    return float4(result + ambientTerm, 1);
+    return float4(pow(result + ambientTerm, 1.0f / 2.2f), 1);
 }
