@@ -28,6 +28,8 @@ using namespace DirectX;
 static float backgroundColor[4] = { .015f, .020f, .030f, 0.0f };
 static float demoWindowVisible = false;
 // static float tint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+static unsigned int uShadowMapResolution = 1024;
+static float fLightProjectionSize = 15.0f;
 #pragma endregion
 
 // --------------------------------------------------------
@@ -80,6 +82,61 @@ void Game::Initialize()
 	DirectionalLight3.Color = DirectX::XMFLOAT3(0.68f, 0.87f, 1.0f);
 	DirectionalLight3.Intensity = 1;
 	m_vLights.push_back(DirectionalLight3);
+
+	// create shadow map
+	// Create the actual texture that will be the shadow map
+	D3D11_TEXTURE2D_DESC shadowDesc = {};
+	shadowDesc.Width = uShadowMapResolution; // Ideally a power of 2 (like 1024)
+	shadowDesc.Height = uShadowMapResolution; // Ideally a power of 2 (like 1024)
+	shadowDesc.ArraySize = 1;
+	shadowDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	shadowDesc.CPUAccessFlags = 0;
+	shadowDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	shadowDesc.MipLevels = 1;
+	shadowDesc.MiscFlags = 0;
+	shadowDesc.SampleDesc.Count = 1;
+	shadowDesc.SampleDesc.Quality = 0;
+	shadowDesc.Usage = D3D11_USAGE_DEFAULT;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> shadowTexture;
+	Graphics::Device->CreateTexture2D(&shadowDesc, 0, shadowTexture.GetAddressOf());
+
+	// Create the depth/stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC shadowDSDesc = {};
+	shadowDSDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	shadowDSDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	shadowDSDesc.Texture2D.MipSlice = 0;
+	Graphics::Device->CreateDepthStencilView(
+		shadowTexture.Get(),
+		&shadowDSDesc,
+		m_cpShadowDSV.GetAddressOf());
+	// Create the SRV for the shadow map
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	Graphics::Device->CreateShaderResourceView(
+		shadowTexture.Get(),
+		&srvDesc,
+		m_cpShadowSRV.GetAddressOf());
+
+	// create the light view matrix
+	XMStoreFloat4x4(&m_m4LightView, 
+		XMMatrixLookToLH(
+		-XMLoadFloat3(&DirectionalLight1.Direction) * 20, // Position: "Backing up" 20 units from origin
+		XMLoadFloat3(&DirectionalLight1.Direction), // Direction: light's direction
+		XMVectorSet(0, 1, 0, 0))); // Up: World up vector (Y axis))
+
+	// create the light projection matrix
+	XMStoreFloat4x4(&m_m4LightProjection,
+		XMMatrixOrthographicLH(
+			fLightProjectionSize,
+			fLightProjectionSize,
+			1.0f,
+			100.0f));
+	
+
+
 	//
 	//
 	//Light PointLight1 = {};
@@ -220,6 +277,8 @@ void Game::LoadShaders()
 		//	inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
 	}
 	*/
+	m_spShadowVertexShader= std::make_shared<SimpleVertexShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"ShadowMapVertexShader.cso").c_str());
 }
 
 
@@ -351,16 +410,17 @@ void Game::CreateGeometry()
 		FixPath(L"../../Assets/Skies/Clouds_Pink/back.png").c_str());
 
 	m_vEntities.push_back(Entity(spMeshCube, spMatMetal));
+	m_vEntities[0].GetTransform()->SetPosition(-7.5f, 0.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshHelix, spMatMetal));
-	m_vEntities[1].GetTransform()->SetPosition(3.0f, 0.0f, 0.0f);
+	m_vEntities[1].GetTransform()->SetPosition(-4.5f, 0.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshSphere, spMatMetal));
-	m_vEntities[2].GetTransform()->SetPosition(6.0f, 0.0f, 0.0f);
+	m_vEntities[2].GetTransform()->SetPosition(-1.5f, 0.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshCylinder, spMatMetalSafety));
-	m_vEntities[3].GetTransform()->SetPosition(9.0f, 0.0f, 0.0f);
+	m_vEntities[3].GetTransform()->SetPosition(1.5f, 0.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshTorus, spMatMetalSafety));
-	m_vEntities[4].GetTransform()->SetPosition(12.0f, 0.0f, 0.0f);
+	m_vEntities[4].GetTransform()->SetPosition(4.5f, 0.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshQuadDouble, spMatMetalSafety));
-	m_vEntities[5].GetTransform()->SetPosition(15.0f, 0.0f, 0.0f);
+	m_vEntities[5].GetTransform()->SetPosition(7.5f, 0.0f, 0.0f);
 	//m_vEntities.push_back(Entity(spMeshQuad, spMatMetal));
 	//m_vEntities[6].GetTransform()->SetPosition(18.0f, 0.0f, 0.0f);
 
@@ -377,7 +437,7 @@ void Game::CreateGeometry()
 	//m_vEntities.push_back(Entity(spMeshQuadDouble, spMatBrick));
 	//m_vEntities[12].GetTransform()->SetPosition(15.0f, -3.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshQuadDouble, spMatBrick));
-	m_vEntities[6].GetTransform()->SetPosition(7.0f, -3.0f, 0.0f);
+	m_vEntities[6].GetTransform()->SetPosition(0.0f, -3.0f, 0.0f);
 	m_vEntities[6].GetTransform()->SetScale(10.0f, 1.0f, 20.0f);
 	//
 	//m_vEntities.push_back(Entity(spMeshCube, spMatMetalSafety));
@@ -434,7 +494,7 @@ void Game::Update(float deltaTime, float totalTime)
 		Window::Quit();
 
 	
-	m_vEntities[0].GetTransform()->SetPosition(0.0f, (float)sin(totalTime) * 5, 0.0f);
+	m_vEntities[0].GetTransform()->SetPosition(m_vEntities[0].GetTransform()->GetPosition().x, (float)sin(totalTime) * 5, m_vEntities[0].GetTransform()->GetPosition().z);
 	m_vEntities[1].GetTransform()->SetRotation(totalTime, 0.5f, 0.0f);
 	m_vEntities[2].GetTransform()->SetPosition(m_vEntities[2].GetTransform()->GetPosition().x, m_vEntities[2].GetTransform()->GetPosition().y, (float)sin(totalTime) * 5);
 	m_vEntities[3].GetTransform()->SetScale(sinf(totalTime)/ 2 + 1, sinf(totalTime) / 2 + 1, sinf(totalTime) / 2 + 1);
@@ -452,6 +512,43 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
+	// draw SHADOW MAP
+	{
+		Graphics::Context->ClearDepthStencilView(m_cpShadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+		ID3D11RenderTargetView* nullRTV{};
+		Graphics::Context->OMSetRenderTargets(1, &nullRTV, m_cpShadowDSV.Get()); // set the shadow map as the depth buffer and unbind the back buffer
+		Graphics::Context->PSSetShader(0, 0, 0); // unbind the pixel shader
+		// create a viewport that matches the shadow map's resolution
+		D3D11_VIEWPORT viewport = {};
+		viewport.Width = (float)uShadowMapResolution;
+		viewport.Height = (float)uShadowMapResolution;
+		viewport.MaxDepth = 1.0f;
+		Graphics::Context->RSSetViewports(1, &viewport);
+
+		// loop through the entities and draw them using the specialized shader
+		m_spShadowVertexShader->SetShader(); 
+		m_spShadowVertexShader->SetMatrix4x4("view", m_m4LightView); 
+		m_spShadowVertexShader->SetMatrix4x4("projection", m_m4LightProjection); 
+		// Loop and draw all entities
+		for (auto& e : m_vEntities)
+		{
+			m_spShadowVertexShader->SetMatrix4x4("world", e.GetTransform()->GetWorldMatrix());
+			m_spShadowVertexShader->CopyAllBufferData();
+			// Draw the mesh directly to avoid the entity's material
+			// Note: Your code may differ significantly here!
+			e.GetMesh()->Draw();
+		}
+
+		// reset the pipeline
+		viewport.Width = (float)Window::Width();
+		viewport.Height = (float)Window::Height();
+		Graphics::Context->RSSetViewports(1, &viewport);
+		Graphics::Context->OMSetRenderTargets(
+			1,
+			Graphics::BackBufferRTV.GetAddressOf(),
+			Graphics::DepthBufferDSV.Get());
+	}
+
 	// Frame START
 	// - These things should happen ONCE PER FRAME
 	// - At the beginning of Game::Draw() before drawing *anything*
@@ -476,9 +573,13 @@ void Game::Draw(float deltaTime, float totalTime)
 			// send the ambient light to the entity's pixel shader
 			m_vEntities[i].GetMaterial()->GetPixelShader()->SetFloat3("ambient", m_f3AmbientLight);
 
-			// send directional light to entity's pixel shader
+			// send light to entity's pixel shader
 			m_vEntities[i].GetMaterial()->GetPixelShader()->SetData("lights", &m_vLights[0], sizeof(Light) * (int)m_vLights.size());
 			//m_vEntities[i].GetMaterial()->GetPixelShader()->CopyAllBufferData();
+
+			// send shadow map to entity's pixel shader
+			m_vEntities[i].GetMaterial()->GetPixelShader()->SetShaderResourceView("ShadowMap", m_cpShadowSRV);
+			
 
 			m_vEntities[i].Draw(m_spActiveCamera, totalTime);
 		}
@@ -695,6 +796,9 @@ void Game::BuildUI()
 		}
 		ImGui::Unindent();
 	}
+
+	ImGui::Image((ImTextureID)(intptr_t)m_cpShadowSRV.Get(), ImVec2(512, 512));
+
 	ImGui::End(); // Ends the current window
 }
 #pragma endregion

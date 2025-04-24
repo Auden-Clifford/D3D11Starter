@@ -2,11 +2,12 @@
 #include "LightingEquations.hlsli"
 
 // texture and sampler
-Texture2D Albedo : register(t0);
-Texture2D NormalMap : register(t1);
-Texture2D RoughnessMap : register(t2);
-Texture2D MetalnessMap : register(t3);
-SamplerState BasicSampler : register(s0);
+Texture2D Albedo            : register(t0);
+Texture2D NormalMap         : register(t1);
+Texture2D RoughnessMap      : register(t2);
+Texture2D MetalnessMap      : register(t3);
+Texture2D ShadowMap         : register(t4);
+SamplerState BasicSampler   : register(s0);
 
 //constant buffer input
 cbuffer ExternalData : register(b0)
@@ -31,6 +32,22 @@ cbuffer ExternalData : register(b0)
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+    // check the shadow map
+    // Perform the perspective divide (divide by W) ourselves
+    input.shadowMapPos /= input.shadowMapPos.w;
+    
+    // Convert the normalized device coordinates to UVs for sampling
+    float2 shadowUV = input.shadowMapPos.xy * 0.5f + 0.5f;
+    shadowUV.y = 1 - shadowUV.y; // Flip the Y
+    
+    // Grab the distances we need: light-to-pixel and closest-surface
+    float distToLight = input.shadowMapPos.z;
+    float distShadowMap = ShadowMap.Sample(BasicSampler, shadowUV).r;
+    
+    // For testing, just return black where there are shadows.
+    if (distShadowMap < distToLight)
+        return float4(0, 0, 0, 1);
+    
     // re-normalize the normals
     input.normal = normalize(input.normal);
     input.tangent = normalize(input.tangent);

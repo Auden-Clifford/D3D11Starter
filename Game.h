@@ -46,12 +46,19 @@ private:
 
 	DirectX::XMFLOAT3 m_f3AmbientLight;
 
+#pragma region Shadow
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_cpShadowDSV;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_cpShadowSRV;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_cpShadowRasterizer;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_cpShadowSampler;
 	DirectX::XMFLOAT4X4 m_m4LightViewMatrix;
 	DirectX::XMFLOAT4X4 m_m4LightProjectionMatrix;
+	std::shared_ptr<SimpleVertexShader> m_spShadowVertexShader;
+	DirectX::XMFLOAT4X4 m_m4LightView;
+	DirectX::XMFLOAT4X4 m_m4LightProjection;
+#pragma endregion
+
+	
 
 
 #pragma region Helper Functions
