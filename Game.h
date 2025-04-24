@@ -46,6 +46,13 @@ private:
 
 	DirectX::XMFLOAT3 m_f3AmbientLight;
 
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_cpShadowDSV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_cpShadowSRV;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_cpShadowRasterizer;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_cpShadowSampler;
+	DirectX::XMFLOAT4X4 m_m4LightViewMatrix;
+	DirectX::XMFLOAT4X4 m_m4LightProjectionMatrix;
+
 
 #pragma region Helper Functions
 	void InitializeNewUIFrame(float a_fDeltaTime);

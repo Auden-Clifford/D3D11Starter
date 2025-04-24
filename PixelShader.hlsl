@@ -38,7 +38,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float2 uvPosition = input.uv * uvScale + uvOffset;
     
     // sample the textures 
-    float3 albedoColor = pow(Albedo.Sample(BasicSampler, uvPosition), 2.2f);
+    float3 albedoColor = pow(Albedo.Sample(BasicSampler, uvPosition), 2.2f).rgb;
     float roughness = RoughnessMap.Sample(BasicSampler, input.uv).r;
     float metalness = MetalnessMap.Sample(BasicSampler, input.uv).r;
     

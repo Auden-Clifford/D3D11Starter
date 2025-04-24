@@ -52,57 +52,64 @@ void Game::Initialize()
 
 	// create cameras
 	m_vCameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 45.0f, 0.1f, 500.0f, 10.0f, 0.01f));
-	m_vCameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(10.0f, 5.0f, -10.0f), XMFLOAT3(XM_PI / 6, -XM_PI / 6, 0.0f), 20.0f, 0.1f, 500.0f, 10.0f, 0.01f));
+	m_vCameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(10.0f, 5.0f, -10.0f), XMFLOAT3(XM_PI / 6.0f, -XM_PI / 6.0f, 0.0f), 20.0f, 0.1f, 500.0f, 10.0f, 0.01f));
 
 	// set the first camera as active
 	m_spActiveCamera = m_vCameras[0];
 
 	// set the ambient light
-	m_f3AmbientLight = XMFLOAT3(0.31f, 0.19f, 0.32f);
+	//m_f3AmbientLight = XMFLOAT3(0.31f, 0.19f, 0.32f);
 
 	// set the other lights
 	Light DirectionalLight1 = {};
 	DirectionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
-	DirectionalLight1.Direction = DirectX::XMFLOAT3(1, -1, 0);
-	DirectionalLight1.Color = DirectX::XMFLOAT3(0.2f, 0.2f, 1);
-	DirectionalLight1.Intensity = 1.0;
+	DirectionalLight1.Direction = DirectX::XMFLOAT3(0.0f, -0.3f, -1.0f);
+	DirectionalLight1.Color = DirectX::XMFLOAT3(1.0f, 0.67f, 0.94f);
+	DirectionalLight1.Intensity = 5.0;
 	m_vLights.push_back(DirectionalLight1);
+
 	Light DirectionalLight2 = {};
 	DirectionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
-	DirectionalLight2.Direction = DirectX::XMFLOAT3(1, 1, 0.5);
-	DirectionalLight2.Color = DirectX::XMFLOAT3(1, 0.2f, 0.2f);
-	DirectionalLight2.Intensity = 1.0;
+	DirectionalLight2.Direction = DirectX::XMFLOAT3(0.0f, 0.3f, 1.0f);
+	DirectionalLight2.Color = DirectX::XMFLOAT3(1.0f, 0.67f, 0.94f);
+	DirectionalLight2.Intensity = 0.5;
 	m_vLights.push_back(DirectionalLight2);
-	
-	
-	Light PointLight1 = {};
-	PointLight1.Type = LIGHT_TYPE_POINT;
-	//DirectionalLight5.Direction = DirectX::XMFLOAT3(0, 1, -1);
-	PointLight1.Position = DirectX::XMFLOAT3(-5, 5, 0);
-	PointLight1.Range = 20;
-	PointLight1.Color = DirectX::XMFLOAT3(1, 1, 0);
-	PointLight1.Intensity = 2;
-	m_vLights.push_back(PointLight1);
-
-	Light PointLight2 = {};
-	PointLight2.Type = LIGHT_TYPE_POINT;
-	//DirectionalLight5.Direction = DirectX::XMFLOAT3(0, 1, -1);
-	PointLight2.Position = DirectX::XMFLOAT3(25, -15, 3);
-	PointLight2.Range = 60;
-	PointLight2.Color = DirectX::XMFLOAT3(0.5f, 0.2f, 1);
-	PointLight2.Intensity = 0.5;
-	m_vLights.push_back(PointLight2);
-
-	Light SpotLight1 = {};
-	SpotLight1.Type = LIGHT_TYPE_SPOT;
-	SpotLight1.Position = DirectX::XMFLOAT3(15, 2, 0);
-	SpotLight1.Range = 60;
-	SpotLight1.Direction = DirectX::XMFLOAT3(0, -1, 0);
-	SpotLight1.Color = DirectX::XMFLOAT3(0.2f, 1, 0.2f);
-	SpotLight1.Intensity = 2.0f;
-	SpotLight1.SpotInnerAngle = 0.2f;
-	SpotLight1.SpotOuterAngle = 0.5f;
-	m_vLights.push_back(SpotLight1);
+	Light DirectionalLight3 = {};
+	DirectionalLight3.Type = LIGHT_TYPE_DIRECTIONAL;
+	DirectionalLight3.Direction = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+	DirectionalLight3.Color = DirectX::XMFLOAT3(0.68f, 0.87f, 1.0f);
+	DirectionalLight3.Intensity = 1;
+	m_vLights.push_back(DirectionalLight3);
+	//
+	//
+	//Light PointLight1 = {};
+	//PointLight1.Type = LIGHT_TYPE_POINT;
+	////DirectionalLight5.Direction = DirectX::XMFLOAT3(0, 1, -1);
+	//PointLight1.Position = DirectX::XMFLOAT3(-5, 5, 0);
+	//PointLight1.Range = 20;
+	//PointLight1.Color = DirectX::XMFLOAT3(1, 1, 0);
+	//PointLight1.Intensity = 2;
+	//m_vLights.push_back(PointLight1);
+	//
+	//Light PointLight2 = {};
+	//PointLight2.Type = LIGHT_TYPE_POINT;
+	////DirectionalLight5.Direction = DirectX::XMFLOAT3(0, 1, -1);
+	//PointLight2.Position = DirectX::XMFLOAT3(25, -15, 3);
+	//PointLight2.Range = 60;
+	//PointLight2.Color = DirectX::XMFLOAT3(0.5f, 0.2f, 1);
+	//PointLight2.Intensity = 0.5;
+	//m_vLights.push_back(PointLight2);
+	//
+	//Light SpotLight1 = {};
+	//SpotLight1.Type = LIGHT_TYPE_SPOT;
+	//SpotLight1.Position = DirectX::XMFLOAT3(15, 2, 0);
+	//SpotLight1.Range = 60;
+	//SpotLight1.Direction = DirectX::XMFLOAT3(0, -1, 0);
+	//SpotLight1.Color = DirectX::XMFLOAT3(0.2f, 1, 0.2f);
+	//SpotLight1.Intensity = 2.0f;
+	//SpotLight1.SpotInnerAngle = 0.2f;
+	//SpotLight1.SpotOuterAngle = 0.5f;
+	//m_vLights.push_back(SpotLight1);
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -291,7 +298,7 @@ void Game::CreateGeometry()
 	//std::shared_ptr<Material> spMatCustom = std::make_shared<Material>(blue, spVertexShader, spPixelShaderCustom, 1.0f);
 	//Material mMatCustom = Material(blue, spVertexShader, spPixelShaderCustom);
 
-	std::shared_ptr<Material> spMatMetal = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.5);
+	std::shared_ptr<Material> spMatMetal = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.5f);
 	spMatMetal->AddTextureSRV("Albedo", srvMetal);
 	spMatMetal->AddTextureSRV("NormalMap", srvMetalNormal);
 	spMatMetal->AddTextureSRV("RoughnessMap", srvMetalRough);
@@ -300,14 +307,14 @@ void Game::CreateGeometry()
 	//spMatMetal->SetUVScale(5.0f, 5.0f);
 	//spMatMetal->SetUVOffset(0.75f, 0.0f);
 
-	std::shared_ptr<Material> spMatBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 1);
+	std::shared_ptr<Material> spMatBrick = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 1.0f);
 	spMatBrick->AddTextureSRV("Albedo", srvBrick);
 	spMatBrick->AddTextureSRV("NormalMap", srvBrickNormal);
 	spMatBrick->AddTextureSRV("RoughnessMap", srvBrickRough);
 	spMatBrick->AddTextureSRV("MetalnessMap", srvNoMetalness);
 	spMatBrick->AddSampler("BasicSampler", cpSamplerState);
 
-	std::shared_ptr<Material> spMatMetalSafety = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.5);
+	std::shared_ptr<Material> spMatMetalSafety = std::make_shared<Material>(white, spVertexShader, spPixelShaderSolid, 0.5f);
 	spMatMetalSafety->AddTextureSRV("Albedo", srvMetalSafety);
 	spMatMetalSafety->AddTextureSRV("NormalMap", srvMetalSafetyNormal);
 	spMatMetalSafety->AddTextureSRV("RoughnessMap", srvMetalSafetyRough);
@@ -348,44 +355,45 @@ void Game::CreateGeometry()
 	m_vEntities[1].GetTransform()->SetPosition(3.0f, 0.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshSphere, spMatMetal));
 	m_vEntities[2].GetTransform()->SetPosition(6.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshCylinder, spMatMetal));
-	m_vEntities[3].GetTransform()->SetPosition(9.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshTorus, spMatMetal));
-	m_vEntities[4].GetTransform()->SetPosition(12.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshQuadDouble, spMatMetal));
-	m_vEntities[5].GetTransform()->SetPosition(15.0f, 0.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshQuad, spMatMetal));
-	m_vEntities[6].GetTransform()->SetPosition(18.0f, 0.0f, 0.0f);
-
-	m_vEntities.push_back(Entity(spMeshCube, spMatBrick));
-	m_vEntities[7].GetTransform()->SetPosition(0.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshHelix, spMatBrick));
-	m_vEntities[8].GetTransform()->SetPosition(3.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshSphere, spMatBrick));
-	m_vEntities[9].GetTransform()->SetPosition(6.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshCylinder, spMatBrick));
-	m_vEntities[10].GetTransform()->SetPosition(9.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshTorus, spMatBrick));
-	m_vEntities[11].GetTransform()->SetPosition(12.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshQuadDouble, spMatBrick));
-	m_vEntities[12].GetTransform()->SetPosition(15.0f, -3.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshQuad, spMatBrick));
-	m_vEntities[13].GetTransform()->SetPosition(18.0f, -3.0f, 0.0f);
-	//
-	m_vEntities.push_back(Entity(spMeshCube, spMatMetalSafety));
-	m_vEntities[14].GetTransform()->SetPosition(0.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshHelix, spMatMetalSafety));
-	m_vEntities[15].GetTransform()->SetPosition(3.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshSphere, spMatMetalSafety));
-	m_vEntities[16].GetTransform()->SetPosition(6.0f, -6.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshCylinder, spMatMetalSafety));
-	m_vEntities[17].GetTransform()->SetPosition(9.0f, -6.0f, 0.0f);
+	m_vEntities[3].GetTransform()->SetPosition(9.0f, 0.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshTorus, spMatMetalSafety));
-	m_vEntities[18].GetTransform()->SetPosition(12.0f, -6.0f, 0.0f);
+	m_vEntities[4].GetTransform()->SetPosition(12.0f, 0.0f, 0.0f);
 	m_vEntities.push_back(Entity(spMeshQuadDouble, spMatMetalSafety));
-	m_vEntities[19].GetTransform()->SetPosition(15.0f, -6.0f, 0.0f);
-	m_vEntities.push_back(Entity(spMeshQuad, spMatMetalSafety));
-	m_vEntities[20].GetTransform()->SetPosition(18.0f, -6.0f, 0.0f);
+	m_vEntities[5].GetTransform()->SetPosition(15.0f, 0.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshQuad, spMatMetal));
+	//m_vEntities[6].GetTransform()->SetPosition(18.0f, 0.0f, 0.0f);
+
+	//m_vEntities.push_back(Entity(spMeshCube, spMatBrick));
+	//m_vEntities[7].GetTransform()->SetPosition(0.0f, -3.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshHelix, spMatBrick));
+	//m_vEntities[8].GetTransform()->SetPosition(3.0f, -3.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshSphere, spMatBrick));
+	//m_vEntities[9].GetTransform()->SetPosition(6.0f, -3.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshCylinder, spMatBrick));
+	//m_vEntities[10].GetTransform()->SetPosition(9.0f, -3.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshTorus, spMatBrick));
+	//m_vEntities[11].GetTransform()->SetPosition(12.0f, -3.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshQuadDouble, spMatBrick));
+	//m_vEntities[12].GetTransform()->SetPosition(15.0f, -3.0f, 0.0f);
+	m_vEntities.push_back(Entity(spMeshQuadDouble, spMatBrick));
+	m_vEntities[6].GetTransform()->SetPosition(7.0f, -3.0f, 0.0f);
+	m_vEntities[6].GetTransform()->SetScale(10.0f, 1.0f, 20.0f);
+	//
+	//m_vEntities.push_back(Entity(spMeshCube, spMatMetalSafety));
+	//m_vEntities[14].GetTransform()->SetPosition(0.0f, -6.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshHelix, spMatMetalSafety));
+	//m_vEntities[15].GetTransform()->SetPosition(3.0f, -6.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshSphere, spMatMetalSafety));
+	//m_vEntities[16].GetTransform()->SetPosition(6.0f, -6.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshCylinder, spMatMetalSafety));
+	//m_vEntities[17].GetTransform()->SetPosition(9.0f, -6.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshTorus, spMatMetalSafety));
+	//m_vEntities[18].GetTransform()->SetPosition(12.0f, -6.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshQuadDouble, spMatMetalSafety));
+	//m_vEntities[19].GetTransform()->SetPosition(15.0f, -6.0f, 0.0f);
+	//m_vEntities.push_back(Entity(spMeshQuad, spMatMetalSafety));
+	//m_vEntities[20].GetTransform()->SetPosition(18.0f, -6.0f, 0.0f);
 
 }
 
@@ -425,15 +433,16 @@ void Game::Update(float deltaTime, float totalTime)
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
 
-	/*
-	//m_vEntities[0].GetTransform()->SetPosition((float)sin(totalTime), 0.0f, 0.0f);
-	m_vEntities[1].GetTransform()->SetPosition(0.5f, 0.5f, 0.0f);
-	m_vEntities[2].GetTransform()->SetRotation(0.0f, 0.0f, totalTime);
-	m_vEntities[2].GetTransform()->SetPosition(sinf(totalTime), sinf(totalTime), 0.0f);
-	m_vEntities[3].GetTransform()->SetPosition(-sinf(totalTime), sinf(totalTime), 0.0f);
-	m_vEntities[4].GetTransform()->SetPosition(-sinf(totalTime), -sinf(totalTime), 0.0f);
-	m_vEntities[4].GetTransform()->SetScale(sinf(totalTime) + 1.5, sinf(totalTime) + 1.5, 0.0f);
-	*/
+	
+	m_vEntities[0].GetTransform()->SetPosition(0.0f, (float)sin(totalTime) * 5, 0.0f);
+	m_vEntities[1].GetTransform()->SetRotation(totalTime, 0.5f, 0.0f);
+	m_vEntities[2].GetTransform()->SetPosition(m_vEntities[2].GetTransform()->GetPosition().x, m_vEntities[2].GetTransform()->GetPosition().y, (float)sin(totalTime) * 5);
+	m_vEntities[3].GetTransform()->SetScale(sinf(totalTime)/ 2 + 1, sinf(totalTime) / 2 + 1, sinf(totalTime) / 2 + 1);
+	m_vEntities[4].GetTransform()->SetPosition(m_vEntities[4].GetTransform()->GetPosition().x, sinf(totalTime) * 2, m_vEntities[4].GetTransform()->GetPosition().z);
+	m_vEntities[4].GetTransform()->SetRotation(totalTime, 0.0f, 0.0f);
+	//m_vEntities[4].GetTransform()->SetPosition(-sinf(totalTime), -sinf(totalTime), 0.0f);
+	//m_vEntities[4].GetTransform()->SetScale(sinf(totalTime) + 1.5, sinf(totalTime) + 1.5, 0.0f);
+	
 	
 }
 
