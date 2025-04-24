@@ -2,12 +2,13 @@
 #include "LightingEquations.hlsli"
 
 // texture and sampler
-Texture2D Albedo            : register(t0);
-Texture2D NormalMap         : register(t1);
-Texture2D RoughnessMap      : register(t2);
-Texture2D MetalnessMap      : register(t3);
-Texture2D ShadowMap         : register(t4);
-SamplerState BasicSampler   : register(s0);
+Texture2D Albedo                        : register(t0);
+Texture2D NormalMap                     : register(t1);
+Texture2D RoughnessMap                  : register(t2);
+Texture2D MetalnessMap                  : register(t3);
+Texture2D ShadowMap                     : register(t4);
+SamplerState BasicSampler               : register(s0);
+SamplerComparisonState ShadowSampler    : register(s1);
 
 //constant buffer input
 cbuffer ExternalData : register(b0)
@@ -42,11 +43,10 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     // Grab the distances we need: light-to-pixel and closest-surface
     float distToLight = input.shadowMapPos.z;
-    float distShadowMap = ShadowMap.Sample(BasicSampler, shadowUV).r;
-    
-    // For testing, just return black where there are shadows.
-    if (distShadowMap < distToLight)
-        return float4(0, 0, 0, 1);
+    float shadowAmount = ShadowMap.SampleCmpLevelZero(
+        ShadowSampler,
+        shadowUV,
+        distToLight).r;
     
     // re-normalize the normals
     input.normal = normalize(input.normal);
@@ -101,6 +101,12 @@ float4 main(VertexToPixel input) : SV_TARGET
         else
         {
             result += CalculateSpotLight(lights[i], input.normal, view, albedoColor, specularColor, roughness, metalness, input.worldPosition);
+        }
+        
+        // apply shadows to the first light
+        if (i == 0)
+        {
+            result *= shadowAmount;
         }
     
     }
