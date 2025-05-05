@@ -855,7 +855,7 @@ Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Game::CreateSRVTextureArray(std
 	texture2DDesc.Width = nShadowMapResolution;
 	texture2DDesc.Height = nShadowMapResolution;
 	texture2DDesc.MipLevels = 1;
-	texture2DDesc.ArraySize = a_vTextures.size(); // Number of shadow maps
+	texture2DDesc.ArraySize = (unsigned int)a_vTextures.size(); // Number of shadow maps
 	texture2DDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	texture2DDesc.Usage = D3D11_USAGE_DEFAULT;
 	texture2DDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
@@ -891,7 +891,7 @@ Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Game::CreateSRVTextureArray(std
 	shaderResourceViewDesc.Texture2DArray.MostDetailedMip = 0; 
 	shaderResourceViewDesc.Texture2DArray.MipLevels = 1; 
 	shaderResourceViewDesc.Texture2DArray.FirstArraySlice = 0; 
-	shaderResourceViewDesc.Texture2DArray.ArraySize = a_vTextures.size();
+	shaderResourceViewDesc.Texture2DArray.ArraySize = (unsigned int)a_vTextures.size();
 
 	// make the SRV
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cpTextureArraySRV;
