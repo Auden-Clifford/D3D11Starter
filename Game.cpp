@@ -31,6 +31,7 @@ static float demoWindowVisible = false;
 // static float tint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static int nShadowMapResolution = 2048;
 static float fLightProjectionSize = 20.0f;
+static int nBlurRadius = 0;
 #pragma endregion
 
 // --------------------------------------------------------
@@ -92,68 +93,17 @@ void Game::Initialize()
 	spDirectionalLight4->Intensity = 5.0;
 	m_vLights.push_back(*spDirectionalLight4.get());
 
-
-
-	// create shadow map
+#pragma region Shadow mapping
+	// create shadow maps
 	std::shared_ptr<SimpleVertexShader> spShadowVertexShader = std::make_shared<SimpleVertexShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"ShadowMapVertexShader.cso").c_str());
 
 	m_vShadowMaps.push_back(ShadowMap(spDirectionalLight1, spShadowVertexShader, nShadowMapResolution, fLightProjectionSize, 1.0f, 100.0f, 20.0f));
 	m_vShadowMaps.push_back(ShadowMap(spDirectionalLight4, spShadowVertexShader, nShadowMapResolution, fLightProjectionSize, 1.0f, 100.0f, 20.0f));
-	// Create the actual texture that will be the shadow map
-	//D3D11_TEXTURE2D_DESC shadowDesc = {};
-	//shadowDesc.Width = nShadowMapResolution; // Ideally a power of 2 (like 1024)
-	//shadowDesc.Height = nShadowMapResolution; // Ideally a power of 2 (like 1024)
-	//shadowDesc.ArraySize = 1;
-	//shadowDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
-	//shadowDesc.CPUAccessFlags = 0;
-	//shadowDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-	//shadowDesc.MipLevels = 1;
-	//shadowDesc.MiscFlags = 0;
-	//shadowDesc.SampleDesc.Count = 1;
-	//shadowDesc.SampleDesc.Quality = 0;
-	//shadowDesc.Usage = D3D11_USAGE_DEFAULT;
-	//Microsoft::WRL::ComPtr<ID3D11Texture2D> shadowTexture;
-	//Graphics::Device->CreateTexture2D(&shadowDesc, 0, shadowTexture.GetAddressOf());
-	//
-	//// Create the depth/stencil view
-	//D3D11_DEPTH_STENCIL_VIEW_DESC shadowDSDesc = {};
-	//shadowDSDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	//shadowDSDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	//shadowDSDesc.Texture2D.MipSlice = 0;
-	//Graphics::Device->CreateDepthStencilView(
-	//	shadowTexture.Get(),
-	//	&shadowDSDesc,
-	//	m_cpShadowDSV.GetAddressOf());
-	//// Create the SRV for the shadow map
-	//D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	//srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-	//srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	//srvDesc.Texture2D.MipLevels = 1;
-	//srvDesc.Texture2D.MostDetailedMip = 0;
-	//Graphics::Device->CreateShaderResourceView(
-	//	shadowTexture.Get(),
-	//	&srvDesc,
-	//	m_cpShadowSRV.GetAddressOf());
-	//
-	//// create the light view matrix
-	//XMStoreFloat4x4(&m_m4LightView, 
-	//	XMMatrixLookToLH(
-	//	-XMLoadFloat3(&DirectionalLight1.Direction) * 20, // Position: "Backing up" 20 units from origin
-	//	XMLoadFloat3(&DirectionalLight1.Direction), // Direction: light's direction
-	//	XMVectorSet(0, 1, 0, 0))); // Up: World up vector (Y axis))
-	//
-	//// create the light projection matrix
-	//XMStoreFloat4x4(&m_m4LightProjection,
-	//	XMMatrixOrthographicLH(
-	//		fLightProjectionSize,
-	//		fLightProjectionSize,
-	//		1.0f,
-	//		100.0f));
 
 	// create a rasterizer state for depth biasing
-	D3D11_RASTERIZER_DESC shadowRastDesc = {}; 
-	shadowRastDesc.FillMode = D3D11_FILL_SOLID; 
+	D3D11_RASTERIZER_DESC shadowRastDesc = {};
+	shadowRastDesc.FillMode = D3D11_FILL_SOLID;
 	shadowRastDesc.CullMode = D3D11_CULL_BACK;
 	shadowRastDesc.DepthClipEnable = true;
 	shadowRastDesc.DepthBias = 1000; // Min. precision units, not world units!
@@ -169,9 +119,27 @@ void Game::Initialize()
 	shadowSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
 	shadowSampDesc.BorderColor[0] = 1.0f; // Only need the first component
 	Graphics::Device->CreateSamplerState(&shadowSampDesc, &m_cpShadowSampler);
+#pragma endregion
+#pragma region Post process
+	// Sampler state for post processing
+	D3D11_SAMPLER_DESC ppSampDesc = {};
+	ppSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	ppSampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	Graphics::Device->CreateSamplerState(&ppSampDesc, m_cpPostProcessSampler.GetAddressOf());
+
+	// create the render targets
+	MakePostProcessRenderTargets();
+
+	// load post process vertex shader
+	m_spPostProcessVertexShader = std::make_shared<SimpleVertexShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"FullscreenVertexShader.cso").c_str());
+	m_spBlurPixelShader = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"BlurPixelShader.cso").c_str());
+#pragma endregion
 	
-	//
-	//
 	//Light PointLight1 = {};
 	//PointLight1.Type = LIGHT_TYPE_POINT;
 	////DirectionalLight5.Direction = DirectX::XMFLOAT3(0, 1, -1);
@@ -498,12 +466,19 @@ void Game::CreateGeometry()
 // --------------------------------------------------------
 void Game::OnResize()
 {
+	// resize cameras
 	for (int i = 0; i < m_vCameras.size(); i++)
 	{
 		if (m_vCameras[i] != nullptr)
 		{
 			m_vCameras[i]->UpdateProjectionMatrix(Window::AspectRatio());
 		}
+	}
+
+	if (Graphics::Device != nullptr)
+	{
+		//remake the post-process render targets with new screen size
+		MakePostProcessRenderTargets();
 	}
 }
 
@@ -548,28 +523,13 @@ void Game::Draw(float deltaTime, float totalTime)
 {
 	// draw SHADOW MAP
 	{
-		//Graphics::Context->ClearDepthStencilView(m_cpShadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0); // reset depth values to 1.0
-		//ID3D11RenderTargetView* nullRTV{};
-		//Graphics::Context->OMSetRenderTargets(1, &nullRTV, m_cpShadowDSV.Get()); // set the shadow map as the depth buffer and unbind the back buffer
-		//Graphics::Context->PSSetShader(0, 0, 0); // unbind the pixel shader
-		//
-		//// create a viewport that matches the shadow map's resolution
-		//D3D11_VIEWPORT viewport = {};
-		//viewport.Width = (float)nShadowMapResolution;
-		//viewport.Height = (float)nShadowMapResolution;
-		//viewport.MaxDepth = 1.0f;
-		//Graphics::Context->RSSetViewports(1, &viewport);
-
-		// enable the specialized rasterizer state for depth biasing
-		//Graphics::Context->RSSetState(m_cpShadowRasterizer.Get());
-
 		// loop through all the shadow maps and draw them
 		for (auto& e : m_vShadowMaps)
 		{
 			e.Draw(m_vEntities, m_cpShadowRasterizer);
 		}
 
-		// create an SRV from the shadow maps
+		// create a Texture2DArray SRV from the shadow maps
 		std::vector<Microsoft::WRL::ComPtr<ID3D11Texture2D>> vShadowMapTextures;
 		for (auto& e : m_vShadowMaps)
 		{
@@ -577,31 +537,6 @@ void Game::Draw(float deltaTime, float totalTime)
 		}
 
 		m_cpShadowSRV = CreateSRVTextureArray(vShadowMapTextures);
-
-		//// loop through the entities and draw them using the specialized shader
-		//m_spShadowVertexShader->SetShader(); 
-		//m_spShadowVertexShader->SetMatrix4x4("view", m_m4LightView); 
-		//m_spShadowVertexShader->SetMatrix4x4("projection", m_m4LightProjection); 
-		//// Loop and draw all entities
-		//for (auto& e : m_vEntities)
-		//{
-		//	m_spShadowVertexShader->SetMatrix4x4("world", e.GetTransform()->GetWorldMatrix());
-		//	m_spShadowVertexShader->CopyAllBufferData();
-		//	// Draw the mesh directly to avoid the entity's material
-		//	// Note: Your code may differ significantly here!
-		//	e.GetMesh()->Draw();
-		//}
-
-		// reset the pipeline
-		//D3D11_VIEWPORT viewport = {};
-		//viewport.Width = (float)Window::Width();
-		//viewport.Height = (float)Window::Height();
-		//Graphics::Context->RSSetViewports(1, &viewport);
-		//Graphics::Context->OMSetRenderTargets(
-		//	1,
-		//	Graphics::BackBufferRTV.GetAddressOf(),
-		//	Graphics::DepthBufferDSV.Get());
-		//Graphics::Context->RSSetState(0);
 	}
 
 	// Frame START
@@ -614,27 +549,25 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
+	Graphics::Context->ClearRenderTargetView(m_cpBlurRenderTargetView.Get(), backgroundColor);
+	Graphics::Context->OMSetRenderTargets(1, m_cpBlurRenderTargetView.GetAddressOf(), Graphics::DepthBufferDSV.Get());
+
+
 	// DRAW geometry
 	// - These steps are generally repeated for EACH object you draw
 	// - Other Direct3D calls will also be necessary to do more complex things
 	{
-		//m_spDefaultTriangle->Draw();
-		//m_spSquare->Draw();
-		//m_spDiamond->Draw();
-
 		//draw all entities
 		for (int i = 0; i < m_vEntities.size(); i++)
 		{
 			std::vector<XMFLOAT4X4> vShadowViews;
 			std::vector<XMFLOAT4X4> vShadowProjections;
-			std::vector<Microsoft::WRL::ComPtr<ID3D11Texture2D>> vShadowMapTextures;
 
 			// send the light view and projection to the vertex shader
 			for (auto& e : m_vShadowMaps)
 			{
 				vShadowViews.push_back(e.GetViewMatrix());
 				vShadowProjections.push_back(e.GetProjectionMatrix());
-				vShadowMapTextures.push_back(e.GetTexture());
 			}
 
 			m_vEntities[i].GetMaterial()->GetVertexShader()->SetData("lightViews", &vShadowViews[0], sizeof(XMFLOAT4X4) * (int)vShadowViews.size());
@@ -663,6 +596,33 @@ void Game::Draw(float deltaTime, float totalTime)
 
 		// draw the skybox
 		m_spSkybox->Draw(m_spActiveCamera);
+	}
+
+	// DRAW POST PROCESS ///////////////////////////////
+	{
+		Graphics::Context->OMSetRenderTargets(1, Graphics::BackBufferRTV.GetAddressOf(), 0);
+
+		m_spPostProcessVertexShader->SetShader();
+		m_spBlurPixelShader->SetShader();
+
+		// Activate shaders and bind resources
+		// Also set any required cbuffer data (not shown)
+		m_spBlurPixelShader->SetShaderResourceView("Pixels", m_cpBlurShaderResourceView.Get());
+		m_spBlurPixelShader->SetSamplerState("ClampSampler", m_cpPostProcessSampler.Get());
+
+		m_spBlurPixelShader->SetInt("blurRadius", nBlurRadius);
+		m_spBlurPixelShader->SetFloat("pixelWidth", 1.0f / Window::Width());
+		m_spBlurPixelShader->SetFloat("pixelHeight", 1.0f / Window::Height());
+		m_spBlurPixelShader->CopyAllBufferData();
+
+		// Tell Direct 3D to draw
+		Graphics::Context->Draw(3, 0); // Draw exactly 3 vertices (one triangle)
+
+		//Graphics::Context->OMSetRenderTargets(
+		//	1,
+		//	Graphics::BackBufferRTV.GetAddressOf(),
+		//	Graphics::DepthBufferDSV.Get());
+		//Graphics::Context->RSSetState(0);
 	}
 
 	ImGui::Render(); // Turns this frame’s UI into renderable triangles
@@ -878,7 +838,8 @@ void Game::BuildUI()
 		ImGui::Unindent();
 	}
 
-	
+	ImGui::DragInt("BlurRadius", &nBlurRadius, 1.0f, 0, 10);
+
 	for (auto& e : m_vShadowMaps)
 	{
 		ImGui::Image((ImTextureID)(intptr_t)e.GetSRV().Get(), ImVec2(256, 256));
@@ -938,6 +899,48 @@ Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Game::CreateSRVTextureArray(std
 
 	// return the SRV
 	return cpTextureArraySRV;
+}
+
+void Game::MakePostProcessRenderTargets()
+{
+	// reset the render target ComPtrs
+	m_cpBlurRenderTargetView.Reset();
+	m_cpBlurShaderResourceView.Reset();
+
+	// Describe the texture we're creating
+	D3D11_TEXTURE2D_DESC textureDesc = {};
+	textureDesc.Width = Window::Width();
+	textureDesc.Height = Window::Height();
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = 0;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	// Create the resource (no need to track it after the views are created below)
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> ppTexture;
+	Graphics::Device->CreateTexture2D(&textureDesc, 0, ppTexture.GetAddressOf());
+
+	// Create the Render Target View
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = textureDesc.Format;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	Graphics::Device->CreateRenderTargetView(
+		ppTexture.Get(),
+		&rtvDesc,
+		m_cpBlurRenderTargetView.ReleaseAndGetAddressOf());
+	// Create the Shader Resource View
+	// By passing it a null description for the SRV, we
+	// get a "default" SRV that has access to the entire resource
+	Graphics::Device->CreateShaderResourceView(
+		ppTexture.Get(),
+		0,
+		m_cpBlurShaderResourceView.ReleaseAndGetAddressOf());
 }
 #pragma endregion
 

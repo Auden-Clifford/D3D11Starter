@@ -28,10 +28,16 @@ public:
 
 private:
 
+#pragma region helpers
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
 	void CreateGeometry();
+
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> CreateSRVTextureArray(std::vector<Microsoft::WRL::ComPtr<ID3D11Texture2D>> a_vTextures);
+	void MakePostProcessRenderTargets();
+#pragma endregion
+
+	
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
@@ -49,22 +55,28 @@ private:
 	DirectX::XMFLOAT3 m_f3AmbientLight;
 
 #pragma region Shadow
-	//Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_cpShadowDSV;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_cpShadowSRV;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_cpShadowRasterizer;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_cpShadowSampler;
-	//DirectX::XMFLOAT4X4 m_m4LightViewMatrix;
-	//DirectX::XMFLOAT4X4 m_m4LightProjectionMatrix;
-	//std::shared_ptr<SimpleVertexShader> m_spShadowVertexShader;
-	//DirectX::XMFLOAT4X4 m_m4LightView;
-	//DirectX::XMFLOAT4X4 m_m4LightProjection;
 	std::vector<ShadowMap> m_vShadowMaps;
 #pragma endregion
 
-	
+#pragma region Post Process
+	// Resources that are shared among all post processes
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_cpPostProcessSampler;
+	std::shared_ptr<SimpleVertexShader> m_spPostProcessVertexShader;
+	//std::shared_ptr<Mesh> m_sp
+
+	// Resources that are tied to a particular post process
+	std::shared_ptr<SimplePixelShader> m_spBlurPixelShader;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_cpBlurRenderTargetView; // For rendering
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_cpBlurShaderResourceView; // For sampling
+
+#pragma endregion
 
 
-#pragma region Helper Functions
+
+#pragma region UI functions
 	void InitializeNewUIFrame(float a_fDeltaTime);
 	void BuildUI();
 #pragma endregion
