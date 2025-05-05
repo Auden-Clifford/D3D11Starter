@@ -8,8 +8,8 @@ cbuffer ExternalData : register(b0)
     matrix worldInvTranspose;
     matrix view;
     matrix projection;
-    matrix lightView;
-    matrix lightProjection;
+    matrix lightViews[5];
+    matrix lightProjections[5];
 }
 
 // --------------------------------------------------------
@@ -50,9 +50,16 @@ VertexToPixel main( VertexShaderInput input )
 	// get the world position
     output.worldPosition = mul(world, float4(input.localPosition, 1)).xyz;
 	
-	// calculate the shadow position
-    matrix shadowWVP = mul(lightProjection, mul(lightView, world));
-    output.shadowMapPos = mul(shadowWVP, float4(input.localPosition, 1.0f));
+	// calculate the positions for each shadow map
+    for (int i = 0; i < 5; i++)
+    {
+        matrix shadowWVP = mul(lightProjections[i], mul(lightViews[i], world));
+        output.shadowMapPositions[i] = mul(shadowWVP, float4(input.localPosition, 1.0f));
+    }
+	
+    //matrix shadowWVP = mul(lightProjections[0], mul(lightViews[0], world));
+    //output.shadowMapPositions[0] = mul(shadowWVP, float4(input.localPosition, 1.0f));
+        
 
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)

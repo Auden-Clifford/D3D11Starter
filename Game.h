@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Lights.h"
 #include "Sky.h"
+#include "ShadowMap.h"
 
 class Game
 {
@@ -30,6 +31,7 @@ private:
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
 	void CreateGeometry();
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> CreateSRVTextureArray(std::vector<Microsoft::WRL::ComPtr<ID3D11Texture2D>> a_vTextures);
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
@@ -47,15 +49,16 @@ private:
 	DirectX::XMFLOAT3 m_f3AmbientLight;
 
 #pragma region Shadow
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_cpShadowDSV;
+	//Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_cpShadowDSV;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_cpShadowSRV;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_cpShadowRasterizer;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_cpShadowSampler;
-	DirectX::XMFLOAT4X4 m_m4LightViewMatrix;
-	DirectX::XMFLOAT4X4 m_m4LightProjectionMatrix;
-	std::shared_ptr<SimpleVertexShader> m_spShadowVertexShader;
-	DirectX::XMFLOAT4X4 m_m4LightView;
-	DirectX::XMFLOAT4X4 m_m4LightProjection;
+	//DirectX::XMFLOAT4X4 m_m4LightViewMatrix;
+	//DirectX::XMFLOAT4X4 m_m4LightProjectionMatrix;
+	//std::shared_ptr<SimpleVertexShader> m_spShadowVertexShader;
+	//DirectX::XMFLOAT4X4 m_m4LightView;
+	//DirectX::XMFLOAT4X4 m_m4LightProjection;
+	std::vector<ShadowMap> m_vShadowMaps;
 #pragma endregion
 
 	

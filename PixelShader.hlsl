@@ -6,7 +6,8 @@ Texture2D Albedo                        : register(t0);
 Texture2D NormalMap                     : register(t1);
 Texture2D RoughnessMap                  : register(t2);
 Texture2D MetalnessMap                  : register(t3);
-Texture2D ShadowMap                     : register(t4);
+Texture2DArray ShadowMaps               : register(t4);
+//Texture2D ShadowMap : register(t4);
 SamplerState BasicSampler               : register(s0);
 SamplerComparisonState ShadowSampler    : register(s1);
 
@@ -33,21 +34,6 @@ cbuffer ExternalData : register(b0)
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-    // check the shadow map
-    // Perform the perspective divide (divide by W) ourselves
-    input.shadowMapPos /= input.shadowMapPos.w;
-    
-    // Convert the normalized device coordinates to UVs for sampling
-    float2 shadowUV = input.shadowMapPos.xy * 0.5f + 0.5f;
-    shadowUV.y = 1 - shadowUV.y; // Flip the Y
-    
-    // Grab the distances we need: light-to-pixel and closest-surface
-    float distToLight = input.shadowMapPos.z;
-    float shadowAmount = ShadowMap.SampleCmpLevelZero(
-        ShadowSampler,
-        shadowUV,
-        distToLight).r;
-    
     // re-normalize the normals
     input.normal = normalize(input.normal);
     input.tangent = normalize(input.tangent);
@@ -103,12 +89,32 @@ float4 main(VertexToPixel input) : SV_TARGET
             result += CalculateSpotLight(lights[i], input.normal, view, albedoColor, specularColor, roughness, metalness, input.worldPosition);
         }
         
-        // apply shadows to the first light
-        if (i == 0)
+        // dont devide by 0 if there was no shadow map
+        if (input.shadowMapPositions[i].w != 0)
         {
+            // check the shadow map
+            // Perform the perspective divide (divide by W) ourselves
+            input.shadowMapPositions[i] /= input.shadowMapPositions[i].w;
+    
+            // Convert the normalized device coordinates to UVs for sampling
+            float2 shadowUV = input.shadowMapPositions[i].xy * 0.5f + 0.5f;
+            shadowUV.y = 1 - shadowUV.y; // Flip the Y
+        
+            // Grab the distances we need: light-to-pixel and closest-surface
+            float distToLight = input.shadowMapPositions[i].z;
+            //float shadowAmount = ShadowMaps.SampleCmpLevelZero(
+            //ShadowSampler,
+            //float3(shadowUV, i),
+            //distToLight).r;
+            float shadowAmount = ShadowMaps.SampleCmpLevelZero(
+            ShadowSampler,
+            float3(shadowUV, i),
+            distToLight).r;
+        
+            // apply shadows to the first light
             result *= shadowAmount;
         }
-    
+        
     }
     
 	// return texture color multiplied by tint

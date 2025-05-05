@@ -17,12 +17,12 @@ struct VertexToPixel
     float3 normal           : NORMAL;
     float3 tangent          : TANGENT;
     float3 worldPosition    : POSITION;
-    float4 shadowMapPos     : SHADOW_POSITION;
+    float4 shadowMapPositions[5] : SHADOW_POSITION;
 };
 
 struct VertexToPixel_Sky
 {
-    float4 screenPosition         : SV_Position;
+    float4 screenPosition   : SV_Position;
     float3 sampleDir        : DIRECTION;
 };
 

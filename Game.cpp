@@ -10,6 +10,7 @@
 #include "Material.h"
 #include "WICTextureLoader.h"
 #include <wrl/client.h>
+#include "ShadowMap.h"
 
 // This code assumes files are in "ImGui" subfolder!
 // Adjust as necessary for your own folder structure and project setup
@@ -29,7 +30,7 @@ static float backgroundColor[4] = { .015f, .020f, .030f, 0.0f };
 static float demoWindowVisible = false;
 // static float tint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static int nShadowMapResolution = 2048;
-static float fLightProjectionSize = 30.0f;
+static float fLightProjectionSize = 20.0f;
 #pragma endregion
 
 // --------------------------------------------------------
@@ -63,77 +64,92 @@ void Game::Initialize()
 	//m_f3AmbientLight = XMFLOAT3(0.31f, 0.19f, 0.32f);
 
 	// set the other lights
-	Light DirectionalLight1 = {};
-	DirectionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
-	DirectionalLight1.Direction = DirectX::XMFLOAT3(0.0f, -0.3f, -1.0f);
-	DirectionalLight1.Color = DirectX::XMFLOAT3(1.0f, 0.67f, 0.94f);
-	DirectionalLight1.Intensity = 5.0;
-	m_vLights.push_back(DirectionalLight1);
+	std::shared_ptr<Light> spDirectionalLight1 = std::make_shared<Light>();
+	spDirectionalLight1->Type = LIGHT_TYPE_DIRECTIONAL;
+	spDirectionalLight1->Direction = DirectX::XMFLOAT3(0.0f, -0.3f, -1.0f);
+	spDirectionalLight1->Color = DirectX::XMFLOAT3(1.0f, 0.67f, 0.94f);
+	spDirectionalLight1->Intensity = 5.0;
+	m_vLights.push_back(*spDirectionalLight1.get());
 
-	Light DirectionalLight2 = {};
-	DirectionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
-	DirectionalLight2.Direction = DirectX::XMFLOAT3(0.0f, 0.3f, 1.0f);
-	DirectionalLight2.Color = DirectX::XMFLOAT3(1.0f, 0.67f, 0.94f);
-	DirectionalLight2.Intensity = 0.25;
-	m_vLights.push_back(DirectionalLight2);
-	Light DirectionalLight3 = {};
-	DirectionalLight3.Type = LIGHT_TYPE_DIRECTIONAL;
-	DirectionalLight3.Direction = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
-	DirectionalLight3.Color = DirectX::XMFLOAT3(0.68f, 0.87f, 1.0f);
-	DirectionalLight3.Intensity = 0.5;
-	m_vLights.push_back(DirectionalLight3);
+	std::shared_ptr<Light> spDirectionalLight2 = std::make_shared<Light>();
+	spDirectionalLight2->Type = LIGHT_TYPE_DIRECTIONAL;
+	spDirectionalLight2->Direction = DirectX::XMFLOAT3(0.0f, 0.3f, 1.0f);
+	spDirectionalLight2->Color = DirectX::XMFLOAT3(1.0f, 0.67f, 0.94f);
+	spDirectionalLight2->Intensity = 0.25;
+	m_vLights.push_back(*spDirectionalLight2.get());
+
+	std::shared_ptr<Light> spDirectionalLight3 = std::make_shared<Light>();
+	spDirectionalLight3->Type = LIGHT_TYPE_DIRECTIONAL;
+	spDirectionalLight3->Direction = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+	spDirectionalLight3->Color = DirectX::XMFLOAT3(0.68f, 0.87f, 1.0f);
+	spDirectionalLight3->Intensity = 0.5;
+	m_vLights.push_back(*spDirectionalLight3.get());
+
+	std::shared_ptr<Light> spDirectionalLight4 = std::make_shared<Light>();
+	spDirectionalLight4->Type = LIGHT_TYPE_DIRECTIONAL;
+	spDirectionalLight4->Direction = DirectX::XMFLOAT3(-1.0f, -0.3f, -0.5f);
+	spDirectionalLight4->Color = DirectX::XMFLOAT3(1.0f, 0.67f, 0.94f);
+	spDirectionalLight4->Intensity = 5.0;
+	m_vLights.push_back(*spDirectionalLight4.get());
+
+
 
 	// create shadow map
+	std::shared_ptr<SimpleVertexShader> spShadowVertexShader = std::make_shared<SimpleVertexShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"ShadowMapVertexShader.cso").c_str());
+
+	m_vShadowMaps.push_back(ShadowMap(spDirectionalLight1, spShadowVertexShader, nShadowMapResolution, fLightProjectionSize, 1.0f, 100.0f, 20.0f));
+	m_vShadowMaps.push_back(ShadowMap(spDirectionalLight4, spShadowVertexShader, nShadowMapResolution, fLightProjectionSize, 1.0f, 100.0f, 20.0f));
 	// Create the actual texture that will be the shadow map
-	D3D11_TEXTURE2D_DESC shadowDesc = {};
-	shadowDesc.Width = nShadowMapResolution; // Ideally a power of 2 (like 1024)
-	shadowDesc.Height = nShadowMapResolution; // Ideally a power of 2 (like 1024)
-	shadowDesc.ArraySize = 1;
-	shadowDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
-	shadowDesc.CPUAccessFlags = 0;
-	shadowDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-	shadowDesc.MipLevels = 1;
-	shadowDesc.MiscFlags = 0;
-	shadowDesc.SampleDesc.Count = 1;
-	shadowDesc.SampleDesc.Quality = 0;
-	shadowDesc.Usage = D3D11_USAGE_DEFAULT;
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> shadowTexture;
-	Graphics::Device->CreateTexture2D(&shadowDesc, 0, shadowTexture.GetAddressOf());
-
-	// Create the depth/stencil view
-	D3D11_DEPTH_STENCIL_VIEW_DESC shadowDSDesc = {};
-	shadowDSDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	shadowDSDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	shadowDSDesc.Texture2D.MipSlice = 0;
-	Graphics::Device->CreateDepthStencilView(
-		shadowTexture.Get(),
-		&shadowDSDesc,
-		m_cpShadowDSV.GetAddressOf());
-	// Create the SRV for the shadow map
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	Graphics::Device->CreateShaderResourceView(
-		shadowTexture.Get(),
-		&srvDesc,
-		m_cpShadowSRV.GetAddressOf());
-
-	// create the light view matrix
-	XMStoreFloat4x4(&m_m4LightView, 
-		XMMatrixLookToLH(
-		-XMLoadFloat3(&DirectionalLight1.Direction) * 20, // Position: "Backing up" 20 units from origin
-		XMLoadFloat3(&DirectionalLight1.Direction), // Direction: light's direction
-		XMVectorSet(0, 1, 0, 0))); // Up: World up vector (Y axis))
-
-	// create the light projection matrix
-	XMStoreFloat4x4(&m_m4LightProjection,
-		XMMatrixOrthographicLH(
-			fLightProjectionSize,
-			fLightProjectionSize,
-			1.0f,
-			100.0f));
+	//D3D11_TEXTURE2D_DESC shadowDesc = {};
+	//shadowDesc.Width = nShadowMapResolution; // Ideally a power of 2 (like 1024)
+	//shadowDesc.Height = nShadowMapResolution; // Ideally a power of 2 (like 1024)
+	//shadowDesc.ArraySize = 1;
+	//shadowDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	//shadowDesc.CPUAccessFlags = 0;
+	//shadowDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	//shadowDesc.MipLevels = 1;
+	//shadowDesc.MiscFlags = 0;
+	//shadowDesc.SampleDesc.Count = 1;
+	//shadowDesc.SampleDesc.Quality = 0;
+	//shadowDesc.Usage = D3D11_USAGE_DEFAULT;
+	//Microsoft::WRL::ComPtr<ID3D11Texture2D> shadowTexture;
+	//Graphics::Device->CreateTexture2D(&shadowDesc, 0, shadowTexture.GetAddressOf());
+	//
+	//// Create the depth/stencil view
+	//D3D11_DEPTH_STENCIL_VIEW_DESC shadowDSDesc = {};
+	//shadowDSDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	//shadowDSDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	//shadowDSDesc.Texture2D.MipSlice = 0;
+	//Graphics::Device->CreateDepthStencilView(
+	//	shadowTexture.Get(),
+	//	&shadowDSDesc,
+	//	m_cpShadowDSV.GetAddressOf());
+	//// Create the SRV for the shadow map
+	//D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	//srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	//srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	//srvDesc.Texture2D.MipLevels = 1;
+	//srvDesc.Texture2D.MostDetailedMip = 0;
+	//Graphics::Device->CreateShaderResourceView(
+	//	shadowTexture.Get(),
+	//	&srvDesc,
+	//	m_cpShadowSRV.GetAddressOf());
+	//
+	//// create the light view matrix
+	//XMStoreFloat4x4(&m_m4LightView, 
+	//	XMMatrixLookToLH(
+	//	-XMLoadFloat3(&DirectionalLight1.Direction) * 20, // Position: "Backing up" 20 units from origin
+	//	XMLoadFloat3(&DirectionalLight1.Direction), // Direction: light's direction
+	//	XMVectorSet(0, 1, 0, 0))); // Up: World up vector (Y axis))
+	//
+	//// create the light projection matrix
+	//XMStoreFloat4x4(&m_m4LightProjection,
+	//	XMMatrixOrthographicLH(
+	//		fLightProjectionSize,
+	//		fLightProjectionSize,
+	//		1.0f,
+	//		100.0f));
 
 	// create a rasterizer state for depth biasing
 	D3D11_RASTERIZER_DESC shadowRastDesc = {}; 
@@ -294,8 +310,7 @@ void Game::LoadShaders()
 		//	inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
 	}
 	*/
-	m_spShadowVertexShader= std::make_shared<SimpleVertexShader>(
-		Graphics::Device, Graphics::Context, FixPath(L"ShadowMapVertexShader.cso").c_str());
+	
 }
 
 
@@ -475,6 +490,8 @@ void Game::CreateGeometry()
 }
 
 
+
+
 // --------------------------------------------------------
 // Handle resizing to match the new window size
 //  - Eventually, we'll want to update our 3D camera
@@ -531,44 +548,60 @@ void Game::Draw(float deltaTime, float totalTime)
 {
 	// draw SHADOW MAP
 	{
-		Graphics::Context->ClearDepthStencilView(m_cpShadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0); // reset depth values to 1.0
-		ID3D11RenderTargetView* nullRTV{};
-		Graphics::Context->OMSetRenderTargets(1, &nullRTV, m_cpShadowDSV.Get()); // set the shadow map as the depth buffer and unbind the back buffer
-		Graphics::Context->PSSetShader(0, 0, 0); // unbind the pixel shader
-
-		// create a viewport that matches the shadow map's resolution
-		D3D11_VIEWPORT viewport = {};
-		viewport.Width = (float)nShadowMapResolution;
-		viewport.Height = (float)nShadowMapResolution;
-		viewport.MaxDepth = 1.0f;
-		Graphics::Context->RSSetViewports(1, &viewport);
+		//Graphics::Context->ClearDepthStencilView(m_cpShadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0); // reset depth values to 1.0
+		//ID3D11RenderTargetView* nullRTV{};
+		//Graphics::Context->OMSetRenderTargets(1, &nullRTV, m_cpShadowDSV.Get()); // set the shadow map as the depth buffer and unbind the back buffer
+		//Graphics::Context->PSSetShader(0, 0, 0); // unbind the pixel shader
+		//
+		//// create a viewport that matches the shadow map's resolution
+		//D3D11_VIEWPORT viewport = {};
+		//viewport.Width = (float)nShadowMapResolution;
+		//viewport.Height = (float)nShadowMapResolution;
+		//viewport.MaxDepth = 1.0f;
+		//Graphics::Context->RSSetViewports(1, &viewport);
 
 		// enable the specialized rasterizer state for depth biasing
-		Graphics::Context->RSSetState(m_cpShadowRasterizer.Get());
+		//Graphics::Context->RSSetState(m_cpShadowRasterizer.Get());
 
-		// loop through the entities and draw them using the specialized shader
-		m_spShadowVertexShader->SetShader(); 
-		m_spShadowVertexShader->SetMatrix4x4("view", m_m4LightView); 
-		m_spShadowVertexShader->SetMatrix4x4("projection", m_m4LightProjection); 
-		// Loop and draw all entities
-		for (auto& e : m_vEntities)
+		// loop through all the shadow maps and draw them
+		for (auto& e : m_vShadowMaps)
 		{
-			m_spShadowVertexShader->SetMatrix4x4("world", e.GetTransform()->GetWorldMatrix());
-			m_spShadowVertexShader->CopyAllBufferData();
-			// Draw the mesh directly to avoid the entity's material
-			// Note: Your code may differ significantly here!
-			e.GetMesh()->Draw();
+			e.Draw(m_vEntities, m_cpShadowRasterizer);
 		}
 
+		// create an SRV from the shadow maps
+		std::vector<Microsoft::WRL::ComPtr<ID3D11Texture2D>> vShadowMapTextures;
+		for (auto& e : m_vShadowMaps)
+		{
+			vShadowMapTextures.push_back(e.GetTexture());
+		}
+
+		m_cpShadowSRV = CreateSRVTextureArray(vShadowMapTextures);
+
+		//// loop through the entities and draw them using the specialized shader
+		//m_spShadowVertexShader->SetShader(); 
+		//m_spShadowVertexShader->SetMatrix4x4("view", m_m4LightView); 
+		//m_spShadowVertexShader->SetMatrix4x4("projection", m_m4LightProjection); 
+		//// Loop and draw all entities
+		//for (auto& e : m_vEntities)
+		//{
+		//	m_spShadowVertexShader->SetMatrix4x4("world", e.GetTransform()->GetWorldMatrix());
+		//	m_spShadowVertexShader->CopyAllBufferData();
+		//	// Draw the mesh directly to avoid the entity's material
+		//	// Note: Your code may differ significantly here!
+		//	e.GetMesh()->Draw();
+		//}
+
 		// reset the pipeline
-		viewport.Width = (float)Window::Width();
-		viewport.Height = (float)Window::Height();
-		Graphics::Context->RSSetViewports(1, &viewport);
-		Graphics::Context->OMSetRenderTargets(
-			1,
-			Graphics::BackBufferRTV.GetAddressOf(),
-			Graphics::DepthBufferDSV.Get());
-		Graphics::Context->RSSetState(0);
+		//D3D11_VIEWPORT viewport = {};
+		//viewport.Width = (float)Window::Width();
+		//viewport.Height = (float)Window::Height();
+		//Graphics::Context->RSSetViewports(1, &viewport);
+		//Graphics::Context->OMSetRenderTargets(
+		//	1,
+		//	Graphics::BackBufferRTV.GetAddressOf(),
+		//	Graphics::DepthBufferDSV.Get());
+		//Graphics::Context->RSSetState(0);
 	}
 
 	// Frame START
@@ -592,9 +625,22 @@ void Game::Draw(float deltaTime, float totalTime)
 		//draw all entities
 		for (int i = 0; i < m_vEntities.size(); i++)
 		{
+			std::vector<XMFLOAT4X4> vShadowViews;
+			std::vector<XMFLOAT4X4> vShadowProjections;
+			std::vector<Microsoft::WRL::ComPtr<ID3D11Texture2D>> vShadowMapTextures;
+
 			// send the light view and projection to the vertex shader
-			m_vEntities[i].GetMaterial()->GetVertexShader()->SetMatrix4x4("lightView", m_m4LightView);
-			m_vEntities[i].GetMaterial()->GetVertexShader()->SetMatrix4x4("lightProjection", m_m4LightProjection);
+			for (auto& e : m_vShadowMaps)
+			{
+				vShadowViews.push_back(e.GetViewMatrix());
+				vShadowProjections.push_back(e.GetProjectionMatrix());
+				vShadowMapTextures.push_back(e.GetTexture());
+			}
+
+			m_vEntities[i].GetMaterial()->GetVertexShader()->SetData("lightViews", &vShadowViews[0], sizeof(XMFLOAT4X4) * (int)vShadowViews.size());
+			m_vEntities[i].GetMaterial()->GetVertexShader()->SetData("lightProjections", &vShadowProjections[0], sizeof(XMFLOAT4X4) * (int)vShadowProjections.size());
+			//m_vEntities[i].GetMaterial()->GetVertexShader()->SetMatrix4x4("lightView", m_m4LightView);
+			//m_vEntities[i].GetMaterial()->GetVertexShader()->SetMatrix4x4("lightProjection", m_m4LightProjection);
 			m_vEntities[i].GetMaterial()->GetVertexShader()->CopyAllBufferData();
 
 			// send the shadow sampler to the pixel shader
@@ -608,7 +654,8 @@ void Game::Draw(float deltaTime, float totalTime)
 			m_vEntities[i].GetMaterial()->GetPixelShader()->CopyAllBufferData();
 
 			// send shadow map to entity's pixel shader
-			m_vEntities[i].GetMaterial()->GetPixelShader()->SetShaderResourceView("ShadowMap", m_cpShadowSRV);
+			m_vEntities[i].GetMaterial()->GetPixelShader()->SetShaderResourceView("ShadowMaps", m_cpShadowSRV);
+			//m_vEntities[i].GetMaterial()->GetPixelShader()->SetShaderResourceView("ShadowMap", m_vShadowMaps[0].GetSRV());
 			
 
 			m_vEntities[i].Draw(m_spActiveCamera, totalTime);
@@ -831,9 +878,66 @@ void Game::BuildUI()
 		ImGui::Unindent();
 	}
 
-	ImGui::Image((ImTextureID)(intptr_t)m_cpShadowSRV.Get(), ImVec2(256, 256));
+	
+	for (auto& e : m_vShadowMaps)
+	{
+		ImGui::Image((ImTextureID)(intptr_t)e.GetSRV().Get(), ImVec2(256, 256));
+	}
 
 	ImGui::End(); // Ends the current window
+}
+
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Game::CreateSRVTextureArray(std::vector<Microsoft::WRL::ComPtr<ID3D11Texture2D>> a_vTextures)
+{
+	// create the resource
+	D3D11_TEXTURE2D_DESC texture2DDesc = {};
+	texture2DDesc.Width = nShadowMapResolution;
+	texture2DDesc.Height = nShadowMapResolution;
+	texture2DDesc.MipLevels = 1;
+	texture2DDesc.ArraySize = a_vTextures.size(); // Number of shadow maps
+	texture2DDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	texture2DDesc.Usage = D3D11_USAGE_DEFAULT;
+	texture2DDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
+	texture2DDesc.SampleDesc.Count = 1;
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> cpTextureArray = nullptr;
+	Graphics::Device->CreateTexture2D(&texture2DDesc, nullptr, cpTextureArray.GetAddressOf());
+
+	// Loop through the individual shadow maps and copy them,
+	// one at a time, to the cube map texure
+	for (int i = 0; i < a_vTextures.size(); i++)
+	{
+		// Calculate the subresource position to copy into
+		unsigned int subresource = D3D11CalcSubresource(
+			0,  // Which mip (zero, since there's only one)
+			i,  // Which array element?
+			1); // How many mip levels are in the texture?
+
+		// Copy from one resource (texture) to another
+		Graphics::Context->CopySubresourceRegion(
+			cpTextureArray.Get(),  // Destination resource
+			subresource,           // Dest subresource index (one of the array elements)
+			0, 0, 0,               // XYZ location of copy
+			a_vTextures[i].Get(),     // Source resource
+			0,                     // Source subresource index (we're assuming there's only one)
+			0);                    // Source subresource "box" of data to copy (zero means the whole thing)
+	}
+
+	// descrive the SRV
+	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc = {};
+	shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY; 
+	shaderResourceViewDesc.Texture2DArray.MostDetailedMip = 0; 
+	shaderResourceViewDesc.Texture2DArray.MipLevels = 1; 
+	shaderResourceViewDesc.Texture2DArray.FirstArraySlice = 0; 
+	shaderResourceViewDesc.Texture2DArray.ArraySize = a_vTextures.size();
+
+	// make the SRV
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cpTextureArraySRV;
+	Graphics::Device->CreateShaderResourceView(cpTextureArray.Get(), &shaderResourceViewDesc, cpTextureArraySRV.GetAddressOf());
+
+	// return the SRV
+	return cpTextureArraySRV;
 }
 #pragma endregion
 
